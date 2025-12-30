@@ -1,5 +1,6 @@
 import { FileList } from "@features/file-manager/components/file-list";
 import { SidebarProvider } from "@shared/components/ui/sidebar";
+import { useTheme } from "@shared/hooks/use-theme";
 import { AppProvider } from "@/apps/providers/app-provider";
 import { AppSidebar } from "./app-sidebar";
 import { TopHeader } from "./top-header";
@@ -21,6 +22,9 @@ function AppContent() {
 }
 
 function App() {
+	// Initialize theme system
+	useTheme();
+
 	return (
 		<AppProvider>
 			<AppContent />

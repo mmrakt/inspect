@@ -11,42 +11,49 @@ import {
 	SidebarMenuItem,
 } from "@shared/components/ui/sidebar";
 import { Folder, Settings } from "lucide-react";
+import { useState } from "react";
 import { useAppContext } from "@/apps/providers/app-provider";
+import { SettingsModal } from "./settings-modal";
 
 export function AppSidebar() {
 	const { favorites, currentPath, setCurrentPath } = useAppContext();
+	const [settingsOpen, setSettingsOpen] = useState(false);
 
 	return (
-		<Sidebar className="border-r">
-			<SidebarHeader className="p-4">
-				<h1 className="text-xl font-bold tracking-tight">inspect</h1>
-			</SidebarHeader>
-			<SidebarContent>
-				<SidebarGroup>
-					<SidebarGroupLabel>Favorites</SidebarGroupLabel>
-					<SidebarGroupContent>
-						<SidebarMenu>
-							{favorites.map((fav) => (
-								<SidebarMenuItem key={fav.path}>
-									<SidebarMenuButton
-										isActive={currentPath === fav.path}
-										onClick={() => setCurrentPath(fav.path)}
-									>
-										<Folder className="mr-2 h-4 w-4" />
-										{fav.name}
-									</SidebarMenuButton>
-								</SidebarMenuItem>
-							))}
-						</SidebarMenu>
-					</SidebarGroupContent>
-				</SidebarGroup>
-			</SidebarContent>
-			<SidebarFooter className="p-4">
-				<SidebarMenuButton>
-					<Settings className="mr-2 h-4 w-4" />
-					Settings
-				</SidebarMenuButton>
-			</SidebarFooter>
-		</Sidebar>
+		<>
+			<Sidebar className="border-r">
+				<SidebarHeader className="p-4">
+					<h1 className="text-xl font-bold tracking-tight">inspect</h1>
+				</SidebarHeader>
+				<SidebarContent>
+					<SidebarGroup>
+						<SidebarGroupLabel>Favorites</SidebarGroupLabel>
+						<SidebarGroupContent>
+							<SidebarMenu>
+								{favorites.map((fav) => (
+									<SidebarMenuItem key={fav.path}>
+										<SidebarMenuButton
+											isActive={currentPath === fav.path}
+											onClick={() => setCurrentPath(fav.path)}
+										>
+											<Folder className="mr-2 h-4 w-4" />
+											{fav.name}
+										</SidebarMenuButton>
+									</SidebarMenuItem>
+								))}
+							</SidebarMenu>
+						</SidebarGroupContent>
+					</SidebarGroup>
+				</SidebarContent>
+				<SidebarFooter className="p-4">
+					<SidebarMenuButton onClick={() => setSettingsOpen(true)}>
+						<Settings className="mr-2 h-4 w-4" />
+						Settings
+					</SidebarMenuButton>
+				</SidebarFooter>
+			</Sidebar>
+
+			<SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
+		</>
 	);
 }
