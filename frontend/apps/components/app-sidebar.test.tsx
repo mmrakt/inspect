@@ -99,6 +99,7 @@ describe("AppSidebar", () => {
 			() => expect(screen.getByText("Applications")).toBeInTheDocument(),
 			{ timeout: 2000 },
 		);
+		expect(screen.getByText("user")).toBeInTheDocument();
 		expect(screen.getByText("Documents")).toBeInTheDocument();
 		expect(screen.getByText("Downloads")).toBeInTheDocument();
 	});

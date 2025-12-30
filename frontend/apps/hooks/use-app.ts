@@ -19,8 +19,11 @@ export function useApp() {
 
 			const docs = await documentDir();
 			const downloads = await downloadDir();
+			const homeName =
+				home.replace(/[\\/]+$/, "").split(/[/\\]/).pop() ?? "Home";
 
 			setFavorites([
+				{ name: homeName, path: home },
 				{ name: "Applications", path: "/Applications" },
 				{ name: "Documents", path: docs },
 				{ name: "Downloads", path: downloads },
