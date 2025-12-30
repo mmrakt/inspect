@@ -32,6 +32,7 @@ mod tests {
                 size: 0,
                 mtime: None,
                 is_dir: false,
+                is_app: false,
             },
         };
         let entry2 = FileEntry {
@@ -41,6 +42,7 @@ mod tests {
                 size: 0,
                 mtime: None,
                 is_dir: false,
+                is_app: false,
             },
         };
         files.insert(entry1.path.clone(), entry1.clone());

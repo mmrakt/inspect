@@ -58,3 +58,18 @@ pub async fn search_content(query: String, path: String) -> Result<Vec<SearchRes
     }
     Ok(results)
 }
+#[tauri::command]
+pub async fn open_app(path: String, app_handle: tauri::AppHandle) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    app_handle
+        .opener()
+        .open_path(path, None::<String>)
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn get_app_icon(path: String) -> Result<String, String> {
+    use crate::utils::icon::extract_app_icon;
+    extract_app_icon(Path::new(&path)).map_err(|e| e.to_string())
+}

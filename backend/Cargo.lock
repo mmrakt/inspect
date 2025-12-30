@@ -1821,11 +1821,13 @@ name = "inspect"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "base64 0.22.1",
  "git2",
  "grep-regex",
  "grep-searcher",
  "ignore",
  "notify",
+ "plist",
  "serde",
  "serde_json",
  "tauri",

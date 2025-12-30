@@ -1,0 +1,105 @@
+import { render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { AppProvider } from "@/apps/providers/app-provider";
+import { AppSidebar } from "./app-sidebar";
+
+// Mock Tauri path
+vi.mock("@tauri-apps/api/path", () => ({
+	homeDir: vi.fn(() => Promise.resolve("/home/user")),
+	documentDir: vi.fn(() => Promise.resolve("/home/user/Documents")),
+	downloadDir: vi.fn(() => Promise.resolve("/home/user/Downloads")),
+}));
+
+// Mock Sidebar components to avoid rendering complexity
+vi.mock("@shared/components/ui/sidebar", () => ({
+	Sidebar: ({
+		children,
+		className,
+	}: {
+		children: React.ReactNode;
+		className?: string;
+	}) => (
+		<div data-testid="sidebar" className={className}>
+			{children}
+		</div>
+	),
+	SidebarHeader: ({
+		children,
+		className,
+	}: {
+		children: React.ReactNode;
+		className?: string;
+	}) => <div className={className}>{children}</div>,
+	SidebarContent: ({ children }: { children: React.ReactNode }) => (
+		<div>{children}</div>
+	),
+	SidebarGroup: ({ children }: { children: React.ReactNode }) => (
+		<div>{children}</div>
+	),
+	SidebarGroupLabel: ({ children }: { children: React.ReactNode }) => (
+		<div>{children}</div>
+	),
+	SidebarGroupContent: ({ children }: { children: React.ReactNode }) => (
+		<div>{children}</div>
+	),
+	SidebarMenu: ({ children }: { children: React.ReactNode }) => (
+		<ul>{children}</ul>
+	),
+	SidebarMenuItem: ({ children }: { children: React.ReactNode }) => (
+		<li>{children}</li>
+	),
+	SidebarMenuButton: ({
+		children,
+		onClick,
+		isActive,
+	}: {
+		children: React.ReactNode;
+		onClick?: () => void;
+		isActive?: boolean;
+	}) => (
+		<button type="button" onClick={onClick} data-active={isActive}>
+			{children}
+		</button>
+	),
+	SidebarFooter: ({
+		children,
+		className,
+	}: {
+		children: React.ReactNode;
+		className?: string;
+	}) => <div className={className}>{children}</div>,
+}));
+
+describe("AppSidebar", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it("renders title", async () => {
+		render(
+			<AppProvider>
+				<AppSidebar />
+			</AppProvider>,
+		);
+
+		await waitFor(() =>
+			expect(screen.getByText("inspect")).toBeInTheDocument(),
+		);
+	});
+
+	it("renders favorites after loading", async () => {
+		render(
+			<AppProvider>
+				<AppSidebar />
+			</AppProvider>,
+		);
+
+		// Wait for favorites to be loaded from useApp init
+		await waitFor(
+			() => expect(screen.getByText("Applications")).toBeInTheDocument(),
+			{ timeout: 2000 },
+		);
+		expect(screen.getByText("Documents")).toBeInTheDocument();
+		expect(screen.getByText("Downloads")).toBeInTheDocument();
+	});
+});

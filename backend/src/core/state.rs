@@ -38,6 +38,7 @@ mod tests {
                 size: 100,
                 mtime: None,
                 is_dir: false,
+                is_app: false,
             },
         };
 

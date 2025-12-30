@@ -1,6 +1,6 @@
+import { useDebounce } from "@shared/hooks/use-debounce";
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { useDebounce } from "./use-debounce";
 
 describe("useDebounce", () => {
 	vi.useFakeTimers();

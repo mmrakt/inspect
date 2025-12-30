@@ -1,15 +1,22 @@
+import { FileList } from "@features/file-manager/components/file-list/index";
 import { invoke } from "@tauri-apps/api/core";
 import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { FileList } from "./index";
+import { AppProvider } from "@/apps/providers/app-provider";
 
 // Mock Tauri invoke
 vi.mock("@tauri-apps/api/core", () => ({
 	invoke: vi.fn(),
 }));
 
+// Mock Tauri path
+vi.mock("@tauri-apps/api/path", () => ({
+	homeDir: vi.fn(() => Promise.resolve(".")),
+	documentDir: vi.fn(() => Promise.resolve("Documents")),
+	downloadDir: vi.fn(() => Promise.resolve("Downloads")),
+}));
+
 describe("FileList UI", () => {
-	const mockOnPathChange = vi.fn();
 	const mockFiles = [
 		{
 			name: "folder1",
@@ -36,12 +43,9 @@ describe("FileList UI", () => {
 		});
 
 		render(
-			<FileList
-				searchQuery=""
-				currentPath="."
-				shouldShowHidden={false}
-				onPathChange={mockOnPathChange}
-			/>,
+			<AppProvider>
+				<FileList />
+			</AppProvider>,
 		);
 
 		await waitFor(() =>
@@ -62,12 +66,9 @@ describe("FileList UI", () => {
 		});
 
 		render(
-			<FileList
-				searchQuery=""
-				currentPath="."
-				shouldShowHidden={false}
-				onPathChange={mockOnPathChange}
-			/>,
+			<AppProvider>
+				<FileList />
+			</AppProvider>,
 		);
 
 		await waitFor(() =>

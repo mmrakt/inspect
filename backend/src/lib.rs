@@ -17,7 +17,9 @@ pub fn run() {
             greet,
             commands::fs::scan_directory,
             commands::fs::search_files,
-            commands::fs::search_content
+            commands::fs::search_content,
+            commands::fs::open_app,
+            commands::fs::get_app_icon,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

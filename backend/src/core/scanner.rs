@@ -9,6 +9,7 @@ pub struct FileMetadata {
     pub size: u64,
     pub mtime: Option<u64>,
     pub is_dir: bool,
+    pub is_app: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -49,7 +50,8 @@ impl Scanner {
         builder
             .hidden(!self.show_hidden)
             .git_ignore(true)
-            .max_depth(self.max_depth);
+            .max_depth(self.max_depth)
+            .follow_links(true);
 
         let walker = builder.build();
 
@@ -67,13 +69,17 @@ impl Scanner {
                         .and_then(|t| t.duration_since(SystemTime::UNIX_EPOCH).ok())
                         .map(|d| d.as_secs());
 
+                    let is_dir = metadata.is_dir();
+                    let is_app = is_dir && entry.file_name().to_string_lossy().ends_with(".app");
+
                     let file_entry = FileEntry {
                         path: entry.path().to_path_buf(),
                         name: entry.file_name().to_string_lossy().to_string(),
                         metadata: FileMetadata {
                             size: metadata.len(),
                             mtime,
-                            is_dir: metadata.is_dir(),
+                            is_dir: is_dir && !is_app,
+                            is_app,
                         },
                     };
                     entries.push(file_entry);
@@ -103,6 +109,7 @@ mod tests {
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].name, "test.txt");
         assert_eq!(results[0].metadata.size, 5);
+        assert_eq!(results[0].metadata.is_app, false);
         Ok(())
     }
 

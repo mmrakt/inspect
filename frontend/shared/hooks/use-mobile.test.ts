@@ -1,6 +1,6 @@
+import { useIsMobile } from "@shared/hooks/use-mobile";
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { useIsMobile } from "./use-mobile";
 
 describe("useIsMobile", () => {
 	it("should return true when window width is less than 768", () => {

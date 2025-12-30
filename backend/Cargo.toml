@@ -33,5 +33,7 @@ walkdir = "2"
 anyhow = "1"
 grep-searcher = "0.1"
 grep-regex = "0.1"
+plist = "1"
+base64 = "0.22"
 
 

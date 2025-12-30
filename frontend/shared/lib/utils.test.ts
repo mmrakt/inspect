@@ -1,5 +1,5 @@
+import { cn } from "@shared/lib/utils";
 import { describe, expect, it } from "vitest";
-import { cn } from "./utils";
 
 describe("cn", () => {
 	it("should merge tailwind classes correctly", () => {

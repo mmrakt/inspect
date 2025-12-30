@@ -1,16 +1,21 @@
-import { homeDir } from "@tauri-apps/api/path";
+import { documentDir, downloadDir, homeDir } from "@tauri-apps/api/path";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useApp } from "./use-app";
+import { useApp } from "@/apps/hooks/use-app";
 
 // Mock Tauri path
 vi.mock("@tauri-apps/api/path", () => ({
 	homeDir: vi.fn(),
+	documentDir: vi.fn(),
+	downloadDir: vi.fn(),
 }));
 
 describe("useApp hook", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		vi.mocked(homeDir).mockResolvedValue("/home");
+		vi.mocked(documentDir).mockResolvedValue("/home/Documents");
+		vi.mocked(downloadDir).mockResolvedValue("/home/Downloads");
 	});
 
 	it("should initialize currentPath with home directory", async () => {

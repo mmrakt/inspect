@@ -1,13 +1,33 @@
-import { homeDir } from "@tauri-apps/api/path";
+import { documentDir, downloadDir, homeDir } from "@tauri-apps/api/path";
 import { useEffect, useState } from "react";
+
+export interface Favorite {
+	name: string;
+	path: string;
+}
 
 export function useApp() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [currentPath, setCurrentPath] = useState<string | null>(null);
 	const [shouldShowHidden, setShouldShowHidden] = useState(false);
+	const [favorites, setFavorites] = useState<Favorite[]>([]);
 
 	useEffect(() => {
-		homeDir().then(setCurrentPath);
+		const init = async () => {
+			const home = await homeDir();
+			setCurrentPath(home);
+
+			const docs = await documentDir();
+			const downloads = await downloadDir();
+
+			setFavorites([
+				{ name: "Applications", path: "/Applications" },
+				{ name: "Documents", path: docs },
+				{ name: "Downloads", path: downloads },
+			]);
+		};
+
+		init();
 	}, []);
 
 	useEffect(() => {
@@ -29,5 +49,6 @@ export function useApp() {
 		currentPath,
 		setCurrentPath,
 		shouldShowHidden,
+		favorites,
 	};
 }

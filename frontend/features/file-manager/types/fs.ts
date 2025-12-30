@@ -2,6 +2,7 @@ export interface FileMetadata {
 	size: number;
 	mtime: number | null;
 	is_dir: boolean;
+	is_app: boolean;
 }
 
 export interface FileEntry {
