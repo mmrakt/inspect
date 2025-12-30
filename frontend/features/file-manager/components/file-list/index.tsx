@@ -1,4 +1,3 @@
-import { File, Folder, MoreHorizontal } from "lucide-react";
 import { Button } from "@shared/components/ui/button";
 import {
 	Table,
@@ -9,21 +8,25 @@ import {
 	TableRow,
 } from "@shared/components/ui/table";
 import { cn } from "@shared/lib/utils";
+import { File, Folder, MoreHorizontal } from "lucide-react";
 import { formatDate, formatSize, useFileList } from "./use-file-list";
 
 export function FileList({
 	searchQuery,
 	currentPath,
+	shouldShowHidden,
 	onPathChange,
 }: {
 	searchQuery: string;
 	currentPath: string;
+	shouldShowHidden: boolean;
 	onPathChange: (path: string) => void;
 }) {
 	const { files, loading, selectedIndex, setSelectedIndex, rowRefs } =
 		useFileList({
 			searchQuery,
 			currentPath,
+			shouldShowHidden,
 			onPathChange,
 		});
 

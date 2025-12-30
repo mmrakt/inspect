@@ -1,10 +1,19 @@
-import { useState } from "react";
 import { FileList } from "@features/file-manager/components/file-list";
 import { Layout } from "@shared/components/Layout";
+import { useApp } from "./apps/hooks/use-app";
 
 function App() {
-	const [searchQuery, setSearchQuery] = useState("");
-	const [currentPath, setCurrentPath] = useState(".");
+	const {
+		searchQuery,
+		setSearchQuery,
+		currentPath,
+		setCurrentPath,
+		shouldShowHidden,
+	} = useApp();
+
+	if (currentPath === null) {
+		return null; // Or a global loading spinner
+	}
 
 	return (
 		<Layout
@@ -16,6 +25,7 @@ function App() {
 			<FileList
 				searchQuery={searchQuery}
 				currentPath={currentPath}
+				shouldShowHidden={shouldShowHidden}
 				onPathChange={setCurrentPath}
 			/>
 		</Layout>

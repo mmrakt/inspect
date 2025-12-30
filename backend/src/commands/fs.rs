@@ -7,8 +7,16 @@ use std::path::Path;
 use tauri::State;
 
 #[tauri::command]
-pub async fn scan_directory(path: String, state: State<'_, AppState>) -> Result<usize, String> {
-    let scanner = Scanner::new(&path);
+pub async fn scan_directory(
+    path: String,
+    recursive: bool,
+    show_hidden: bool,
+    state: State<'_, AppState>,
+) -> Result<usize, String> {
+    let mut scanner = Scanner::new(&path).with_show_hidden(show_hidden);
+    if !recursive {
+        scanner = scanner.with_max_depth(1);
+    }
     let entries = scanner.scan().map_err(|e| e.to_string())?;
     let count = entries.len();
     state.update_files(entries);

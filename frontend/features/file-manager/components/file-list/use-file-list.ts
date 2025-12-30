@@ -1,6 +1,6 @@
+import { useDebounce } from "@shared/hooks/use-debounce";
 import { invoke } from "@tauri-apps/api/core";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useDebounce } from "@shared/hooks/use-debounce";
 import type { FileEntry } from "../../types/fs";
 
 export function formatSize(bytes: number) {
@@ -19,12 +19,14 @@ export function formatDate(timestamp: number | null) {
 interface UseFileListProps {
 	searchQuery: string;
 	currentPath: string;
+	shouldShowHidden: boolean;
 	onPathChange: (path: string) => void;
 }
 
 export function useFileList({
 	searchQuery,
 	currentPath,
+	shouldShowHidden,
 	onPathChange,
 }: UseFileListProps) {
 	const [files, setFiles] = useState<FileEntry[]>([]);
@@ -44,7 +46,12 @@ export function useFileList({
 	const initialScan = useCallback(async () => {
 		try {
 			setLoading(true);
-			await invoke("scan_directory", { path: currentPath });
+			const isRecursive = debouncedSearchQuery.length > 0;
+			await invoke("scan_directory", {
+				path: currentPath,
+				recursive: isRecursive,
+				showHidden: shouldShowHidden,
+			});
 			const results = await invoke<FileEntry[]>("search_files", {
 				query: debouncedSearchQuery,
 			});
@@ -67,7 +74,7 @@ export function useFileList({
 		} finally {
 			setLoading(false);
 		}
-	}, [debouncedSearchQuery, currentPath]);
+	}, [debouncedSearchQuery, currentPath, shouldShowHidden]);
 
 	useEffect(() => {
 		initialScan();

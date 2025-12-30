@@ -2,11 +2,7 @@
 	"compilerOptions": {
 		"target": "ES2020",
 		"useDefineForClassFields": true,
-		"lib": [
-			"ES2020",
-			"DOM",
-			"DOM.Iterable"
-		],
+		"lib": ["ES2020", "DOM", "DOM.Iterable"],
 		"module": "ESNext",
 		"skipLibCheck": true,
 		/* Bundler mode */
@@ -23,20 +19,12 @@
 		"noFallthroughCasesInSwitch": true,
 		"baseUrl": ".",
 		"paths": {
-			"@/*": [
-				"./frontend/*"
-			],
-			"@features/*": [
-				"./frontend/features/*"
-			],
-			"@shared/*": [
-				"./frontend/shared/*"
-			]
+			"@/*": ["./frontend/*"],
+			"@features/*": ["./frontend/features/*"],
+			"@shared/*": ["./frontend/shared/*"]
 		}
 	},
-	"include": [
-		"frontend"
-	],
+	"include": ["frontend"],
 	"references": [
 		{
 			"path": "./tsconfig.node.json"

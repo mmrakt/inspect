@@ -49,9 +49,16 @@ describe("useFileList hook", () => {
 		window.HTMLElement.prototype.scrollIntoView = vi.fn();
 	});
 
-	it("should fetch files on mount", async () => {
-		vi.mocked(invoke).mockImplementation((cmd) => {
-			if (cmd === "scan_directory") return Promise.resolve();
+	it("should fetch files on mount with shallow scan", async () => {
+		vi.mocked(invoke).mockImplementation((cmd, args) => {
+			if (cmd === "scan_directory") {
+				expect(args).toEqual({
+					path: ".",
+					recursive: false,
+					showHidden: false,
+				});
+				return Promise.resolve();
+			}
 			if (cmd === "search_files") return Promise.resolve(mockFiles);
 			return Promise.resolve();
 		});
@@ -60,6 +67,7 @@ describe("useFileList hook", () => {
 			useFileList({
 				searchQuery: "",
 				currentPath: ".",
+				shouldShowHidden: false,
 				onPathChange: mockOnPathChange,
 			}),
 		);
@@ -84,6 +92,7 @@ describe("useFileList hook", () => {
 			useFileList({
 				searchQuery: "",
 				currentPath: ".",
+				shouldShowHidden: false,
 				onPathChange: mockOnPathChange,
 			}),
 		);

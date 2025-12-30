@@ -20,21 +20,38 @@ pub struct FileEntry {
 
 pub struct Scanner {
     base_path: PathBuf,
+    max_depth: Option<usize>,
+    show_hidden: bool,
 }
 
 impl Scanner {
     pub fn new<P: AsRef<Path>>(path: P) -> Self {
         Self {
             base_path: path.as_ref().to_path_buf(),
+            max_depth: None,
+            show_hidden: false,
         }
+    }
+
+    pub fn with_max_depth(mut self, depth: usize) -> Self {
+        self.max_depth = Some(depth);
+        self
+    }
+
+    pub fn with_show_hidden(mut self, show: bool) -> Self {
+        self.show_hidden = show;
+        self
     }
 
     pub fn scan(&self) -> Result<Vec<FileEntry>> {
         let mut entries = Vec::new();
-        let walker = WalkBuilder::new(&self.base_path)
-            .hidden(false) // Show hidden files by default, let ignore handle it if needed
+        let mut builder = WalkBuilder::new(&self.base_path);
+        builder
+            .hidden(!self.show_hidden)
             .git_ignore(true)
-            .build();
+            .max_depth(self.max_depth);
+
+        let walker = builder.build();
 
         for result in walker {
             match result {
@@ -86,6 +103,28 @@ mod tests {
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].name, "test.txt");
         assert_eq!(results[0].metadata.size, 5);
+        Ok(())
+    }
+
+    #[test]
+    fn test_scanner_with_depth() -> Result<()> {
+        let dir = tempdir()?;
+        let sub_dir = dir.path().join("sub");
+        fs::create_dir(&sub_dir)?;
+        let file_path = sub_dir.join("inner.txt");
+        fs::write(&file_path, "hello")?;
+
+        // Shallow scan (depth 1) should only see "sub"
+        let scanner = Scanner::new(dir.path()).with_max_depth(1);
+        let results = scanner.scan()?;
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].name, "sub");
+
+        // Recursive scan (None) should see "sub" and "inner.txt"
+        let scanner_recursive = Scanner::new(dir.path());
+        let results_recursive = scanner_recursive.scan()?;
+        assert_eq!(results_recursive.len(), 2);
+
         Ok(())
     }
 }

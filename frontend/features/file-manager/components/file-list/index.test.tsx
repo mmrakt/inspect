@@ -39,11 +39,14 @@ describe("FileList UI", () => {
 			<FileList
 				searchQuery=""
 				currentPath="."
+				shouldShowHidden={false}
 				onPathChange={mockOnPathChange}
 			/>,
 		);
 
-		await waitFor(() => expect(screen.getByText("folder1")).toBeInTheDocument());
+		await waitFor(() =>
+			expect(screen.getByText("folder1")).toBeInTheDocument(),
+		);
 
 		expect(screen.getByText("Name")).toBeInTheDocument();
 		expect(screen.getByText("Size")).toBeInTheDocument();
@@ -62,6 +65,7 @@ describe("FileList UI", () => {
 			<FileList
 				searchQuery=""
 				currentPath="."
+				shouldShowHidden={false}
 				onPathChange={mockOnPathChange}
 			/>,
 		);

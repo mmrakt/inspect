@@ -1,5 +1,3 @@
-import { Clock, Folder, Hash, Search, Settings } from "lucide-react";
-import React from "react";
 import {
 	Breadcrumb,
 	BreadcrumbItem,
@@ -20,6 +18,8 @@ import {
 	SidebarMenuItem,
 	SidebarProvider,
 } from "@shared/components/ui/sidebar";
+import { Clock, Folder, Hash, Search, Settings } from "lucide-react";
+import React from "react";
 
 interface LayoutProps {
 	children: React.ReactNode;
