@@ -10,7 +10,9 @@ export default defineConfig(async () => ({
 	plugins: [react(), tailwindcss()],
 	resolve: {
 		alias: {
-			"@": path.resolve(__dirname, "./src"),
+			"@": path.resolve(__dirname, "./frontend"),
+			"@features": path.resolve(__dirname, "./frontend/features"),
+			"@shared": path.resolve(__dirname, "./frontend/shared"),
 		},
 	},
 
@@ -31,8 +33,8 @@ export default defineConfig(async () => ({
 				}
 			: undefined,
 		watch: {
-			// 3. tell Vite to ignore watching `src-tauri`
-			ignored: ["**/src-tauri/**"],
+			// 3. tell Vite to ignore watching `backend`
+			ignored: ["**/backend/**"],
 		},
 	},
 }));

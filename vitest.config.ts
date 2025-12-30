@@ -1,8 +1,8 @@
 /// <reference types="vitest" />
 
+import path from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import path from "path";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
@@ -10,12 +10,14 @@ export default defineConfig({
 	test: {
 		globals: true,
 		environment: "jsdom",
-		setupFiles: "./src/test/setup.ts",
-		include: ["src/**/*.{test,spec}.{ts,tsx}"],
+		setupFiles: "./frontend/test/setup.ts",
+		include: ["frontend/**/*.{test,spec}.{ts,tsx}"],
 	},
 	resolve: {
 		alias: {
-			"@": path.resolve(__dirname, "./src"),
+			"@": path.resolve(__dirname, "./frontend"),
+			"@features": path.resolve(__dirname, "./frontend/features"),
+			"@shared": path.resolve(__dirname, "./frontend/shared"),
 		},
 	},
 });

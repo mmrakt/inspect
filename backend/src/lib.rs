@@ -4,15 +4,21 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
-mod core;
 mod commands;
+mod core;
 mod utils;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .manage(core::state::AppState::new())
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            commands::fs::scan_directory,
+            commands::fs::search_files,
+            commands::fs::search_content
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
