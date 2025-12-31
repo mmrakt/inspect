@@ -1,10 +1,10 @@
-Check lint and type-check, unit-test errors, and fix them.
+Check lint and tc, unit-test errors, and fix them.
 
 ```sh
 // check
 bun lint:fix
 
-// type-check
+// tc
 bun tc
 
 // unit-test

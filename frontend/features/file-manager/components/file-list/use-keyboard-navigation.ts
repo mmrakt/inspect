@@ -45,6 +45,21 @@ const getKeyboardAction = ({
 
 	switch (key) {
 		case "ArrowDown": {
+			if (metaKey) {
+				if (files.length === 0) return { type: "none" };
+				const selectedFile = files[focusedIndex];
+				if (selectedFile?.metadata.is_dir) {
+					const newPath =
+						currentPath === "."
+							? selectedFile.name
+							: `${currentPath}/${selectedFile.name}`;
+					return { type: "open-dir", path: newPath, name: selectedFile.name };
+				}
+				if (selectedFile?.metadata.is_app) {
+					return { type: "open-app", path: selectedFile.path };
+				}
+				return { type: "none" };
+			}
 			if (files.length === 0) return { type: "none" };
 			const index = Math.min(focusedIndex + 1, files.length - 1);
 			return shiftKey
@@ -52,14 +67,21 @@ const getKeyboardAction = ({
 				: { type: "select-single", index };
 		}
 		case "ArrowUp": {
+			if (metaKey) {
+				// Cmd+Up -> Go to Parent
+				if (currentPath === ".") return { type: "none" };
+				const parts = currentPath.split("/");
+				const currentDirName = parts.pop() ?? null;
+				const parentPath = parts.length === 0 ? "." : parts.join("/");
+				return { type: "open-parent", path: parentPath, currentDirName };
+			}
 			if (files.length === 0) return { type: "none" };
 			const index = Math.max(focusedIndex - 1, 0);
 			return shiftKey
 				? { type: "select-range", index }
 				: { type: "select-single", index };
 		}
-		case "ArrowRight":
-		case "Enter": {
+		case "ArrowRight": {
 			if (files.length === 0) return { type: "none" };
 			const selectedFile = files[focusedIndex];
 			if (selectedFile?.metadata.is_dir) {
@@ -69,8 +91,22 @@ const getKeyboardAction = ({
 						: `${currentPath}/${selectedFile.name}`;
 				return { type: "open-dir", path: newPath, name: selectedFile.name };
 			}
-			if (selectedFile?.metadata.is_app) {
-				return { type: "open-app", path: selectedFile.path };
+			return { type: "none" };
+		}
+		case "o": {
+			if (metaKey) {
+				if (files.length === 0) return { type: "none" };
+				const selectedFile = files[focusedIndex];
+				if (selectedFile?.metadata.is_dir) {
+					const newPath =
+						currentPath === "."
+							? selectedFile.name
+							: `${currentPath}/${selectedFile.name}`;
+					return { type: "open-dir", path: newPath, name: selectedFile.name };
+				}
+				if (selectedFile?.metadata.is_app) {
+					return { type: "open-app", path: selectedFile.path };
+				}
 			}
 			return { type: "none" };
 		}

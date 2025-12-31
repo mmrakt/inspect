@@ -72,10 +72,7 @@ fn move_entries_impl(paths: &[PathBuf], target_dir: &Path) -> Result<Vec<PathBuf
             .ok_or_else(|| "Invalid source path".to_string())?;
         let destination = target_dir.join(file_name);
         if destination.exists() {
-            return Err(format!(
-                "Target already exists: {}",
-                destination.display()
-            ));
+            return Err(format!("Target already exists: {}", destination.display()));
         }
         fs::rename(source, &destination).map_err(|e| e.to_string())?;
         moved.push(destination);
@@ -110,6 +107,157 @@ pub async fn get_app_icon(path: String) -> Result<String, String> {
     extract_app_icon(Path::new(&path)).map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+pub async fn rename_entry(path: String, new_name: String) -> Result<(), String> {
+    let source = PathBuf::from(&path);
+    let parent = source.parent().ok_or("Invalid path")?;
+    let destination = parent.join(new_name);
+
+    if destination.exists() {
+        // Return a specific error message that frontend can match
+        return Err("Target already exists".to_string());
+    }
+
+    fs::rename(source, destination).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn duplicate_entry(path: String) -> Result<String, String> {
+    let source = PathBuf::from(&path);
+    let parent = source.parent().ok_or("Invalid path")?;
+    let _file_name = source.file_name().ok_or("Invalid path")?.to_string_lossy();
+    let ext = source.extension().map(|e| e.to_string_lossy().to_string());
+    let stem = source.file_stem().ok_or("Invalid path")?.to_string_lossy();
+
+    let (base_stem, start_counter) = {
+        let re = regex::Regex::new(r"^(.*) copy(?: (\d+))?$").unwrap();
+        if let Some(caps) = re.captures(&stem) {
+            let base = caps.get(1).map_or("", |m| m.as_str()).to_string();
+            let count = caps
+                .get(2)
+                .map_or(1, |m| m.as_str().parse::<i32>().unwrap_or(1));
+            (base, count)
+        } else {
+            (stem.to_string(), 0)
+        }
+    };
+
+    let mut new_name;
+    let mut destination;
+    let mut counter = start_counter;
+
+    // If it was "foo", start_counter is 0. Next is "foo copy" (implies 1 but no number).
+    // If it was "foo copy", start_counter is 1. Next should be "foo copy 2".
+
+    loop {
+        if counter == 0 {
+            new_name = format!("{} copy", base_stem);
+            counter = 1;
+        } else {
+            // If we just became 1 from 0, and "foo copy" exists, next loop `counter` will be 1 (incremented at end of loop? No, logic above)
+            // Let's restructure loop efficiently.
+            counter += 1;
+            new_name = format!("{} copy {}", base_stem, counter);
+        }
+
+        if let Some(ref e) = ext {
+            new_name = format!("{}.{}", new_name, e);
+        }
+        destination = parent.join(&new_name);
+
+        if !destination.exists() {
+            break;
+        }
+    }
+
+    if source.is_dir() {
+        copy_recursively(&source, &destination).map_err(|e| e.to_string())?;
+    } else {
+        fs::copy(&source, &destination).map_err(|e| e.to_string())?;
+    }
+
+    Ok(destination.to_string_lossy().to_string())
+}
+
+fn copy_recursively(source: &Path, user_destination: &Path) -> std::io::Result<()> {
+    fs::create_dir_all(user_destination)?;
+    for entry in fs::read_dir(source)? {
+        let entry = entry?;
+        let file_type = entry.file_type()?;
+        if file_type.is_dir() {
+            copy_recursively(&entry.path(), &user_destination.join(entry.file_name()))?;
+        } else {
+            fs::copy(entry.path(), user_destination.join(entry.file_name()))?;
+        }
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn move_to_trash(path: String) -> Result<(), String> {
+    trash::delete(path).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn show_context_menu(
+    app: tauri::AppHandle,
+    path: String,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    use tauri::menu::ContextMenu;
+    use tauri::menu::Menu;
+    use tauri::Manager;
+
+    // Store path in state
+    state.set_context_menu_path(Some(path));
+
+    let rename = crate::utils::menu::create_context_menu_item(
+        &app,
+        "context_rename",
+        "Rename",
+        Some("rename"),
+    )
+    .map_err(|e| e.to_string())?;
+
+    let duplicate = crate::utils::menu::create_context_menu_item(
+        &app,
+        "context_duplicate",
+        "Duplicate",
+        Some("duplicate"),
+    )
+    .map_err(|e| e.to_string())?;
+
+    let trash = crate::utils::menu::create_context_menu_item(
+        &app,
+        "context_trash",
+        "Move to Trash",
+        Some("trash"),
+    )
+    .map_err(|e| e.to_string())?;
+
+    let menu = Menu::with_items(
+        &app,
+        &[
+            &rename,
+            &duplicate,
+            &tauri::menu::PredefinedMenuItem::separator(&app).map_err(|e| e.to_string())?,
+            &trash,
+        ],
+    )
+    .map_err(|e| e.to_string())?;
+
+    if let Some(window) = app.get_webview_window("main") {
+        menu.popup(window.as_ref().window())
+            .map_err(|e| e.to_string())?;
+    } else {
+        return Err("No main window".to_string());
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::move_entries_impl;
@@ -126,11 +274,8 @@ mod tests {
         fs::write(&file_a, "a").unwrap();
         fs::write(&file_b, "b").unwrap();
 
-        let moved = move_entries_impl(
-            &[file_a.clone(), file_b.clone()],
-            target_dir.path(),
-        )
-        .unwrap();
+        let moved =
+            move_entries_impl(&[file_a.clone(), file_b.clone()], target_dir.path()).unwrap();
 
         assert_eq!(moved.len(), 2);
         assert!(!file_a.exists());

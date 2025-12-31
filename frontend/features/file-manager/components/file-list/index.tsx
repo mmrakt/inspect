@@ -11,8 +11,9 @@ import {
 	TableHeader,
 	TableRow,
 } from "@shared/components/ui/table";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAppContext } from "@/apps/providers/app-provider";
+import { useFileOperations } from "./use-file-operations";
 
 export function FileList() {
 	const { searchQuery, currentPath, shouldShowHidden, setCurrentPath } =
@@ -28,6 +29,7 @@ export function FileList() {
 		launchingPath,
 		onRowSelect,
 		dragState,
+		refresh,
 	} = useFileList({
 		searchQuery,
 		currentPath,
@@ -36,6 +38,31 @@ export function FileList() {
 	});
 
 	const { appIcons } = useAppIcons(files);
+	const { renamingPath, setRenamingPath, rename } = useFileOperations(refresh);
+
+	const [hoveredPath, setHoveredPath] = useState<string | null>(null);
+
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "Enter" && !renamingPath) {
+				// Prioritize selected item
+				if (selectedIndices.size === 1) {
+					const index = Array.from(selectedIndices)[0];
+					const file = files[index];
+					if (file) {
+						e.preventDefault();
+						setRenamingPath(file.path);
+					}
+				}
+			}
+			if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+				setHoveredPath(null);
+			}
+		};
+
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [renamingPath, setRenamingPath, selectedIndices, files]);
 
 	const handleOpen = useCallback(
 		(file: FileEntry) => {
@@ -97,9 +124,14 @@ export function FileList() {
 								isSelected={selectedIndices.has(index)}
 								isHoverPreview={hoverPreviewPath === file.path}
 								isLaunching={launchingPath === file.path}
+								isRenaming={renamingPath === file.path}
+								isHovered={hoveredPath === file.path}
 								iconData={appIcons[file.path]}
 								onSelect={onRowSelect}
 								onOpen={handleOpen}
+								onHover={setHoveredPath}
+								onRename={rename}
+								setRenamingPath={setRenamingPath}
 								rowRef={(el) => {
 									if (el) rowRefs.current.set(index, el);
 									else rowRefs.current.delete(index);

@@ -228,6 +228,11 @@ export function useFileList({
 		}),
 		useSensor(KeyboardSensor, {
 			coordinateGetter: sortableKeyboardCoordinates,
+			keyboardCodes: {
+				start: ["Space"],
+				cancel: ["Escape"],
+				end: ["Space", "Enter"],
+			},
 		}),
 	);
 
@@ -307,6 +312,7 @@ export function useFileList({
 	useEffect(() => {
 		const selectedRow = rowRefs.current.get(focusedIndex);
 		if (selectedRow) {
+			selectedRow.focus();
 			selectedRow.scrollIntoView({ block: "nearest", behavior: "auto" });
 		}
 	}, [focusedIndex]);
@@ -331,5 +337,6 @@ export function useFileList({
 			handleDragEnd,
 			handleDragCancel,
 		},
+		refresh,
 	};
 }

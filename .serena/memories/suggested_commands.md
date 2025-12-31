@@ -14,7 +14,7 @@
 - `bun run lint:fix` (Biome check + write)
 
 ## Type check
-- `bun run type-check`
+- `bun run tc`
 
 ## Tests
 - `bun run test` (FE + BE)

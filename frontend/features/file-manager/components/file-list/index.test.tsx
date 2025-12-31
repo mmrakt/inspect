@@ -16,6 +16,16 @@ vi.mock("@tauri-apps/api/path", () => ({
 	downloadDir: vi.fn(() => Promise.resolve("Downloads")),
 }));
 
+// Mock Tauri event
+vi.mock("@tauri-apps/api/event", () => ({
+	listen: vi.fn(() => Promise.resolve(() => {})),
+}));
+
+// Mock Tauri dialog
+vi.mock("@tauri-apps/plugin-dialog", () => ({
+	message: vi.fn(),
+}));
+
 describe("FileList UI", () => {
 	const mockFiles = [
 		{

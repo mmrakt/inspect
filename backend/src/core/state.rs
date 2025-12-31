@@ -5,12 +5,14 @@ use std::sync::Mutex;
 
 pub struct AppState {
     pub files: Mutex<HashMap<PathBuf, FileEntry>>,
+    pub context_menu_path: Mutex<Option<String>>,
 }
 
 impl AppState {
     pub fn new() -> Self {
         Self {
             files: Mutex::new(HashMap::new()),
+            context_menu_path: Mutex::new(None),
         }
     }
 
@@ -20,6 +22,15 @@ impl AppState {
         for entry in new_entries {
             files.insert(entry.path.clone(), entry);
         }
+    }
+
+    pub fn set_context_menu_path(&self, path: Option<String>) {
+        let mut p = self.context_menu_path.lock().unwrap();
+        *p = path;
+    }
+
+    pub fn get_context_menu_path(&self) -> Option<String> {
+        self.context_menu_path.lock().unwrap().clone()
     }
 }
 
