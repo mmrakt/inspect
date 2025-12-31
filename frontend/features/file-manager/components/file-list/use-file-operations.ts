@@ -7,9 +7,12 @@ export function useFileOperations(onOperationComplete: () => void) {
 	const [renamingPath, setRenamingPath] = useState<string | null>(null);
 
 	const moveToTrash = useCallback(
-		async (path: string) => {
+		async (path: string | string[]) => {
 			try {
-				await invoke("move_to_trash", { path });
+				const paths = Array.isArray(path) ? path : [path];
+				await Promise.all(
+					paths.map((p) => invoke("move_to_trash", { path: p })),
+				);
 				onOperationComplete();
 			} catch (error) {
 				console.error("Failed to move to trash:", error);

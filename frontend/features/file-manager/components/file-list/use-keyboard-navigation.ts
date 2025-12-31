@@ -11,6 +11,7 @@ interface UseKeyboardNavigationProps {
 	rememberSelection: (path: string, name: string) => void;
 	onPathChange: (path: string) => void;
 	onOpenApp: (path: string) => void;
+	onTrash?: () => void;
 }
 
 type KeyboardAction =
@@ -20,6 +21,7 @@ type KeyboardAction =
 	| { type: "open-dir"; path: string; name: string }
 	| { type: "open-app"; path: string }
 	| { type: "open-parent"; path: string; currentDirName: string | null }
+	| { type: "trash" }
 	| { type: "none" };
 
 const getKeyboardAction = ({
@@ -117,6 +119,12 @@ const getKeyboardAction = ({
 			const parentPath = parts.length === 0 ? "." : parts.join("/");
 			return { type: "open-parent", path: parentPath, currentDirName };
 		}
+		case "Backspace": {
+			if (metaKey) {
+				return { type: "trash" };
+			}
+			return { type: "none" };
+		}
 		default:
 			return { type: "none" };
 	}
@@ -145,6 +153,7 @@ export function useKeyboardNavigation({
 	rememberSelection,
 	onPathChange,
 	onOpenApp,
+	onTrash,
 }: UseKeyboardNavigationProps) {
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
@@ -186,6 +195,9 @@ export function useKeyboardNavigation({
 					}
 					onPathChange(action.path);
 					break;
+				case "trash":
+					onTrash?.();
+					break;
 			}
 		};
 
@@ -201,5 +213,6 @@ export function useKeyboardNavigation({
 		rememberSelection,
 		onPathChange,
 		onOpenApp,
+		onTrash,
 	]);
 }

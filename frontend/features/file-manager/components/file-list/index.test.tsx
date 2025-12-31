@@ -85,4 +85,46 @@ describe("FileList UI", () => {
 			expect(screen.getByText("No files found.")).toBeInTheDocument(),
 		);
 	});
+
+	it("should move file to trash on Cmd+Backspace", async () => {
+		vi.mocked(invoke).mockImplementation((cmd) => {
+			if (cmd === "scan_directory") return Promise.resolve();
+			if (cmd === "search_files") return Promise.resolve(mockFiles);
+			if (cmd === "move_to_trash") return Promise.resolve();
+			return Promise.resolve();
+		});
+
+		render(
+			<AppProvider>
+				<FileList />
+			</AppProvider>,
+		);
+
+		await waitFor(() =>
+			expect(screen.getByText("file1.txt")).toBeInTheDocument(),
+		);
+
+		// Select the file (click it)
+		const row = screen.getByText("file1.txt").closest("tr");
+		expect(row).toBeInTheDocument();
+		row?.click();
+
+		await waitFor(() => {
+			expect(row).toHaveAttribute("aria-selected", "true");
+		});
+
+		// Trigger Cmd+Backspace
+		const event = new KeyboardEvent("keydown", {
+			key: "Backspace",
+			metaKey: true,
+			bubbles: true,
+		});
+		window.dispatchEvent(event);
+
+		await waitFor(() => {
+			expect(invoke).toHaveBeenCalledWith("move_to_trash", {
+				path: "file1.txt",
+			});
+		});
+	});
 });

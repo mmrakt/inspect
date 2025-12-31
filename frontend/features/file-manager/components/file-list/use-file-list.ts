@@ -29,6 +29,7 @@ interface UseFileListProps {
 	currentPath: string;
 	shouldShowHidden: boolean;
 	onPathChange: (path: string) => void;
+	onTrash?: () => void;
 }
 
 interface FolderDropData {
@@ -44,6 +45,7 @@ export function useFileList({
 	currentPath,
 	shouldShowHidden,
 	onPathChange,
+	onTrash,
 }: UseFileListProps) {
 	const [files, setFiles] = useState<FileEntry[]>([]);
 	const [launchingPath, setLaunchingPath] = useState<string | null>(null);
@@ -123,6 +125,7 @@ export function useFileList({
 		rememberSelection,
 		onPathChange,
 		onOpenApp: handleOpenApp,
+		onTrash,
 	});
 
 	const handleScanComplete = useCallback((results: FileEntry[]) => {

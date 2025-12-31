@@ -35,10 +35,18 @@ export function FileList() {
 		currentPath,
 		shouldShowHidden,
 		onPathChange: setCurrentPath,
+		onTrash: () => {
+			if (selectedIndices.size === 0) return;
+			const pathsToTrash = Array.from(selectedIndices)
+				.map((index) => files[index]?.path)
+				.filter((path): path is string => !!path);
+			moveToTrash(pathsToTrash);
+		},
 	});
 
 	const { appIcons } = useAppIcons(files);
-	const { renamingPath, setRenamingPath, rename } = useFileOperations(refresh);
+	const { renamingPath, setRenamingPath, rename, moveToTrash } =
+		useFileOperations(refresh);
 
 	const [hoveredPath, setHoveredPath] = useState<string | null>(null);
 
