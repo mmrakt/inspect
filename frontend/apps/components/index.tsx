@@ -8,11 +8,11 @@ import { TopHeader } from "./top-header";
 function AppContent() {
 	return (
 		<SidebarProvider>
-			<div className="flex h-screen w-full overflow-hidden bg-background text-foreground">
+			<div className="app-shell flex h-screen w-full overflow-hidden text-foreground">
 				<AppSidebar />
-				<main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+				<main className="flex-1 flex min-w-0 flex-col overflow-hidden bg-background">
 					<TopHeader />
-					<div className="flex-1 overflow-auto p-0">
+					<div className="flex-1 overflow-auto p-0 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2">
 						<FileList />
 					</div>
 				</main>
