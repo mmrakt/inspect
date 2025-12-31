@@ -18,6 +18,7 @@ pub fn run() {
             commands::fs::scan_directory,
             commands::fs::search_files,
             commands::fs::search_content,
+            commands::fs::move_entries,
             commands::fs::open_app,
             commands::fs::get_app_icon,
         ])

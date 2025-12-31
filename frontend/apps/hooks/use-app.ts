@@ -6,6 +6,30 @@ export interface Favorite {
 	path: string;
 }
 
+type FavoriteTemplate = {
+	name: string | ((homeName: string) => string);
+	path: string | ((home: string, docs: string, downloads: string) => string);
+};
+
+const DEFAULT_FAVORITES: FavoriteTemplate[] = [
+	{
+		name: (homeName) => homeName,
+		path: (home) => home,
+	},
+	{
+		name: "Applications",
+		path: "/Applications",
+	},
+	{
+		name: "Documents",
+		path: (_, docs) => docs,
+	},
+	{
+		name: "Downloads",
+		path: (_, __, downloads) => downloads,
+	},
+];
+
 export function useApp() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [currentPath, setCurrentPath] = useState<string | null>(null);
@@ -20,14 +44,23 @@ export function useApp() {
 			const docs = await documentDir();
 			const downloads = await downloadDir();
 			const homeName =
-				home.replace(/[\\/]+$/, "").split(/[/\\]/).pop() ?? "Home";
+				home
+					.replace(/[\\/]+$/, "")
+					.split(/[/\\]/)
+					.pop() ?? "Home";
 
-			setFavorites([
-				{ name: homeName, path: home },
-				{ name: "Applications", path: "/Applications" },
-				{ name: "Documents", path: docs },
-				{ name: "Downloads", path: downloads },
-			]);
+			setFavorites(
+				DEFAULT_FAVORITES.map((favorite) => ({
+					name:
+						typeof favorite.name === "function"
+							? favorite.name(homeName)
+							: favorite.name,
+					path:
+						typeof favorite.path === "function"
+							? favorite.path(home, docs, downloads)
+							: favorite.path,
+				})),
+			);
 		};
 
 		init();

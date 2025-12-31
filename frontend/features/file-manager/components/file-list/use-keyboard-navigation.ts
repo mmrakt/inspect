@@ -1,75 +1,154 @@
 import type { FileEntry } from "@features/file-manager/types/fs";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useEffect } from "react";
 
 interface UseKeyboardNavigationProps {
 	files: FileEntry[];
 	currentPath: string;
-	selectedIndex: number;
-	setSelectedIndex: (index: number) => void;
+	focusedIndex: number;
+	selectSingle: (index: number) => void;
+	selectRange: (index: number) => void;
+	selectAll: () => void;
+	rememberSelection: (path: string, name: string) => void;
 	onPathChange: (path: string) => void;
 	onOpenApp: (path: string) => void;
 }
 
+type KeyboardAction =
+	| { type: "select-all" }
+	| { type: "select-single"; index: number }
+	| { type: "select-range"; index: number }
+	| { type: "open-dir"; path: string; name: string }
+	| { type: "open-app"; path: string }
+	| { type: "open-parent"; path: string; currentDirName: string | null }
+	| { type: "none" };
+
+const getKeyboardAction = ({
+	key,
+	metaKey,
+	ctrlKey,
+	shiftKey,
+	files,
+	focusedIndex,
+	currentPath,
+}: {
+	key: string;
+	metaKey: boolean;
+	ctrlKey: boolean;
+	shiftKey: boolean;
+	files: FileEntry[];
+	focusedIndex: number;
+	currentPath: string;
+}): KeyboardAction => {
+	if ((metaKey || ctrlKey) && key.toLowerCase() === "a") {
+		return { type: "select-all" };
+	}
+
+	switch (key) {
+		case "ArrowDown": {
+			if (files.length === 0) return { type: "none" };
+			const index = Math.min(focusedIndex + 1, files.length - 1);
+			return shiftKey
+				? { type: "select-range", index }
+				: { type: "select-single", index };
+		}
+		case "ArrowUp": {
+			if (files.length === 0) return { type: "none" };
+			const index = Math.max(focusedIndex - 1, 0);
+			return shiftKey
+				? { type: "select-range", index }
+				: { type: "select-single", index };
+		}
+		case "ArrowRight":
+		case "Enter": {
+			if (files.length === 0) return { type: "none" };
+			const selectedFile = files[focusedIndex];
+			if (selectedFile?.metadata.is_dir) {
+				const newPath =
+					currentPath === "."
+						? selectedFile.name
+						: `${currentPath}/${selectedFile.name}`;
+				return { type: "open-dir", path: newPath, name: selectedFile.name };
+			}
+			if (selectedFile?.metadata.is_app) {
+				return { type: "open-app", path: selectedFile.path };
+			}
+			return { type: "none" };
+		}
+		case "ArrowLeft": {
+			if (currentPath === ".") return { type: "none" };
+			const parts = currentPath.split("/");
+			const currentDirName = parts.pop() ?? null;
+			const parentPath = parts.length === 0 ? "." : parts.join("/");
+			return { type: "open-parent", path: parentPath, currentDirName };
+		}
+		default:
+			return { type: "none" };
+	}
+};
+
+/**
+ * キーボード操作での選択移動やディレクトリ移動を管理する。
+ *
+ * @param files - 表示対象のファイル一覧
+ * @param currentPath - 現在のディレクトリパス
+ * @param focusedIndex - キーボード操作の基準となる選択インデックス
+ * @param selectSingle - 単一選択の更新関数
+ * @param selectRange - 範囲選択の更新関数
+ * @param selectAll - 全選択の更新関数
+ * @param rememberSelection - パスごとの選択履歴を保存する関数
+ * @param onPathChange - パス遷移時のコールバック
+ * @param onOpenApp - アプリ起動時のコールバック
+ */
 export function useKeyboardNavigation({
 	files,
 	currentPath,
-	selectedIndex,
-	setSelectedIndex,
+	focusedIndex,
+	selectSingle,
+	selectRange,
+	selectAll,
+	rememberSelection,
 	onPathChange,
 	onOpenApp,
 }: UseKeyboardNavigationProps) {
-	const selectionHistory = useRef<Map<string, string>>(new Map());
-
-	const updateSelection = useCallback(
-		(index: number) => {
-			setSelectedIndex(index);
-			if (files[index]) {
-				selectionHistory.current.set(currentPath, files[index].name);
-			}
-		},
-		[files, currentPath, setSelectedIndex],
-	);
-
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (e.target instanceof HTMLInputElement) return;
 
-			switch (e.key) {
-				case "ArrowDown":
-					e.preventDefault();
-					updateSelection(Math.min(selectedIndex + 1, files.length - 1));
+			const action = getKeyboardAction({
+				key: e.key,
+				metaKey: e.metaKey,
+				ctrlKey: e.ctrlKey,
+				shiftKey: e.shiftKey,
+				files,
+				focusedIndex,
+				currentPath,
+			});
+
+			if (action.type === "none") return;
+
+			e.preventDefault();
+			switch (action.type) {
+				case "select-all":
+					selectAll();
 					break;
-				case "ArrowUp":
-					e.preventDefault();
-					updateSelection(Math.max(selectedIndex - 1, 0));
+				case "select-single":
+					selectSingle(action.index);
 					break;
-				case "ArrowRight":
-				case "Enter": {
-					e.preventDefault();
-					const selectedFile = files[selectedIndex];
-					if (selectedFile?.metadata.is_dir) {
-						selectionHistory.current.set(currentPath, selectedFile.name);
-						const newPath =
-							currentPath === "."
-								? selectedFile.name
-								: `${currentPath}/${selectedFile.name}`;
-						onPathChange(newPath);
-					} else if (selectedFile?.metadata.is_app) {
-						onOpenApp(selectedFile.path);
+				case "select-range":
+					selectRange(action.index);
+					break;
+				case "open-dir":
+					rememberSelection(currentPath, action.name);
+					onPathChange(action.path);
+					break;
+				case "open-app":
+					onOpenApp(action.path);
+					break;
+				case "open-parent":
+					if (action.currentDirName) {
+						rememberSelection(action.path, action.currentDirName);
 					}
-					break;
-				}
-				case "ArrowLeft":
-					e.preventDefault();
-					if (currentPath !== ".") {
-						const parts = currentPath.split("/");
-						const currentDirName = parts.pop();
-						const parentPath = parts.length === 0 ? "." : parts.join("/");
-						if (currentDirName) {
-							selectionHistory.current.set(parentPath, currentDirName);
-						}
-						onPathChange(parentPath);
-					}
+					onPathChange(action.path);
 					break;
 			}
 		};
@@ -78,12 +157,13 @@ export function useKeyboardNavigation({
 		return () => window.removeEventListener("keydown", handleKeyDown);
 	}, [
 		files,
-		selectedIndex,
 		currentPath,
+		focusedIndex,
+		selectSingle,
+		selectRange,
+		selectAll,
+		rememberSelection,
 		onPathChange,
 		onOpenApp,
-		updateSelection,
 	]);
-
-	return useMemo(() => ({ selectionHistory }), []);
 }

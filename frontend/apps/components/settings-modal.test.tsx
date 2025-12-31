@@ -53,5 +53,4 @@ describe("SettingsModal", () => {
 
 		expect(mockSetThemeMode).toHaveBeenCalledWith("dark");
 	});
-
 });

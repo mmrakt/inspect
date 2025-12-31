@@ -1,3 +1,4 @@
+import { closestCenter, DndContext, DragOverlay } from "@dnd-kit/core";
 import { FileRow } from "@features/file-manager/components/file-list/file-row";
 import { useAppIcons } from "@features/file-manager/components/file-list/use-app-icons";
 import { useFileList } from "@features/file-manager/components/file-list/use-file-list";
@@ -20,11 +21,13 @@ export function FileList() {
 	const {
 		files,
 		loading,
-		selectedIndex,
-		setSelectedIndex,
+		selectedIndices,
+		hoverPreviewPath,
 		rowRefs,
 		openApp,
 		launchingPath,
+		onRowSelect,
+		dragState,
 	} = useFileList({
 		searchQuery,
 		currentPath,
@@ -47,6 +50,16 @@ export function FileList() {
 		[currentPath, setCurrentPath, openApp],
 	);
 
+	const activeFile =
+		dragState.activeId === null
+			? null
+			: (files.find((file) => file.path === dragState.activeId) ?? null);
+	const draggedCount = dragState.draggedPaths.length;
+	const dragLabel =
+		draggedCount <= 1
+			? (activeFile?.name ?? "1 item")
+			: `${draggedCount} items`;
+
 	if (loading) {
 		return (
 			<div className="p-8 text-center text-muted-foreground">
@@ -56,45 +69,63 @@ export function FileList() {
 	}
 
 	return (
-		<div className="w-full">
-			<Table>
-				<TableHeader className="bg-muted/50 sticky top-0">
-					<TableRow>
-						<TableHead className="w-[400px]">Name</TableHead>
-						<TableHead>Size</TableHead>
-						<TableHead>Modified</TableHead>
-						<TableHead className="text-right" />
-					</TableRow>
-				</TableHeader>
-				<TableBody>
-					{files.map((file, index) => (
-						<FileRow
-							key={file.path}
-							file={file}
-							index={index}
-							isSelected={selectedIndex === index}
-							isLaunching={launchingPath === file.path}
-							iconData={appIcons[file.path]}
-							onSelect={setSelectedIndex}
-							onOpen={handleOpen}
-							rowRef={(el) => {
-								if (el) rowRefs.current.set(index, el);
-								else rowRefs.current.delete(index);
-							}}
-						/>
-					))}
-					{files.length === 0 && (
+		<DndContext
+			sensors={dragState.sensors}
+			collisionDetection={closestCenter}
+			onDragStart={dragState.handleDragStart}
+			onDragMove={dragState.handleDragMove}
+			onDragOver={dragState.handleDragOver}
+			onDragEnd={dragState.handleDragEnd}
+			onDragCancel={dragState.handleDragCancel}
+		>
+			<div className="w-full">
+				<Table>
+					<TableHeader className="bg-muted/50 sticky top-0">
 						<TableRow>
-							<TableCell
-								colSpan={4}
-								className="h-24 text-center text-muted-foreground"
-							>
-								No files found.
-							</TableCell>
+							<TableHead className="w-[400px]">Name</TableHead>
+							<TableHead>Size</TableHead>
+							<TableHead>Modified</TableHead>
+							<TableHead className="text-right" />
 						</TableRow>
-					)}
-				</TableBody>
-			</Table>
-		</div>
+					</TableHeader>
+					<TableBody>
+						{files.map((file, index) => (
+							<FileRow
+								key={file.path}
+								file={file}
+								index={index}
+								isSelected={selectedIndices.has(index)}
+								isHoverPreview={hoverPreviewPath === file.path}
+								isLaunching={launchingPath === file.path}
+								iconData={appIcons[file.path]}
+								onSelect={onRowSelect}
+								onOpen={handleOpen}
+								rowRef={(el) => {
+									if (el) rowRefs.current.set(index, el);
+									else rowRefs.current.delete(index);
+								}}
+							/>
+						))}
+						{files.length === 0 && (
+							<TableRow>
+								<TableCell
+									colSpan={4}
+									className="h-24 text-center text-muted-foreground"
+								>
+									No files found.
+								</TableCell>
+							</TableRow>
+						)}
+					</TableBody>
+				</Table>
+			</div>
+			<DragOverlay>
+				{dragState.activeId && (
+					<div className="rounded-md border bg-background px-3 py-2 text-sm shadow-lg">
+						{dragLabel}
+					</div>
+				)}
+			</DragOverlay>
+		</DndContext>
 	);
 }

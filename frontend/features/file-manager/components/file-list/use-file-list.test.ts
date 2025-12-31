@@ -107,7 +107,8 @@ describe("useFileList hook", () => {
 		await act(async () => {
 			window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown" }));
 		});
-		expect(result.current.selectedIndex).toBe(1);
+		expect(result.current.focusedIndex).toBe(1);
+		expect(result.current.selectedIndices.has(1)).toBe(true);
 
 		// ArrowRight on folder
 		await act(async () => {
@@ -120,7 +121,8 @@ describe("useFileList hook", () => {
 		await act(async () => {
 			window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp" }));
 		});
-		expect(result.current.selectedIndex).toBe(0);
+		expect(result.current.focusedIndex).toBe(0);
+		expect(result.current.selectedIndices.has(0)).toBe(true);
 
 		// ArrowRight on folder1
 		await act(async () => {
