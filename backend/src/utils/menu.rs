@@ -1,6 +1,7 @@
 use tauri::menu::{IconMenuItemBuilder, MenuItemKind, NativeIcon};
 use tauri::{AppHandle, Runtime};
 
+/// Creates a menu item for a context menu, optionally with a native icon.
 pub fn create_context_menu_item<R: Runtime>(
     app: &AppHandle<R>,
     id: &str,
@@ -23,5 +24,29 @@ pub fn create_context_menu_item<R: Runtime>(
     } else {
         let item = MenuItemBuilder::with_id(id, text).build(app)?;
         Ok(MenuItemKind::MenuItem(item))
+    }
+}
+/// Centralized handler for menu events. Maps menu IDs to frontend actions
+/// and emits a `context-menu-action` event.
+pub fn handle_menu_event<R: tauri::Runtime>(
+    app: &tauri::AppHandle<R>,
+    event: tauri::menu::MenuEvent,
+) {
+    use crate::constants::*;
+    use tauri::Manager;
+    use tauri_specta::Event;
+
+    let id = event.id.as_ref();
+    let action = match id {
+        id if id == MENU_ID_RENAME => ContextMenuAction::Rename,
+        id if id == MENU_ID_DUPLICATE => ContextMenuAction::Duplicate,
+        id if id == MENU_ID_TRASH => ContextMenuAction::Trash,
+        id if id == MENU_ID_ADD_FAVORITE => ContextMenuAction::AddFavorite,
+        _ => return,
+    };
+
+    let state = app.state::<crate::core::state::AppState>();
+    if let Some(path) = state.get_context_menu_path() {
+        let _ = ContextMenuPayload { action, path }.emit(app);
     }
 }

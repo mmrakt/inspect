@@ -38,5 +38,8 @@ regex = "1"
 plist = "1"
 base64 = "0.22"
 tauri-plugin-dialog = "2.4.2"
+specta = "2.0.0-rc.20"
+tauri-specta = { version = "2.0.0-rc.20", features = ["derive", "typescript"] }
+specta-typescript = "0.0.7"
 
 

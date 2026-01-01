@@ -16,8 +16,13 @@ import { useAppContext } from "@/apps/providers/app-provider";
 import { useFileOperations } from "./use-file-operations";
 
 export function FileList() {
-	const { searchQuery, currentPath, shouldShowHidden, setCurrentPath } =
-		useAppContext();
+	const {
+		searchQuery,
+		currentPath,
+		shouldShowHidden,
+		setCurrentPath,
+		addFavorite,
+	} = useAppContext();
 
 	const {
 		files,
@@ -46,7 +51,7 @@ export function FileList() {
 
 	const { appIcons } = useAppIcons(files);
 	const { renamingPath, setRenamingPath, rename, moveToTrash } =
-		useFileOperations(refresh);
+		useFileOperations(refresh, addFavorite);
 
 	const [hoveredPath, setHoveredPath] = useState<string | null>(null);
 
@@ -66,11 +71,33 @@ export function FileList() {
 			if (e.key === "ArrowUp" || e.key === "ArrowDown") {
 				setHoveredPath(null);
 			}
+
+			// Cmd + Shift + B to add to favorites
+			if (
+				(e.metaKey || e.ctrlKey) &&
+				e.shiftKey &&
+				e.key.toLowerCase() === "b"
+			) {
+				if (hoveredPath) {
+					const hoveredFile = files.find((f) => f.path === hoveredPath);
+					if (hoveredFile?.metadata.is_dir) {
+						e.preventDefault();
+						addFavorite(hoveredPath);
+					}
+				}
+			}
 		};
 
 		window.addEventListener("keydown", handleKeyDown);
 		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [renamingPath, setRenamingPath, selectedIndices, files]);
+	}, [
+		renamingPath,
+		setRenamingPath,
+		selectedIndices,
+		files,
+		hoveredPath,
+		addFavorite,
+	]);
 
 	const handleOpen = useCallback(
 		(file: FileEntry) => {

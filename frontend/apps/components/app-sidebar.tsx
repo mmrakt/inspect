@@ -13,7 +13,18 @@ import {
 import { Folder, Settings } from "lucide-react";
 import { useState } from "react";
 import { useAppContext } from "@/apps/providers/app-provider";
+import applicationsIcon from "@/assets/application.svg";
+import documentsIcon from "@/assets/document.svg";
+import downloadsIcon from "@/assets/download.svg";
+import homeIcon from "@/assets/home.svg";
 import { SettingsModal } from "./settings-modal";
+
+const DEFAULT_ICONS: Record<string, string> = {
+	home: homeIcon,
+	documents: documentsIcon,
+	downloads: downloadsIcon,
+	applications: applicationsIcon,
+};
 
 export function AppSidebar() {
 	const { favorites, currentPath, setCurrentPath } = useAppContext();
@@ -41,7 +52,19 @@ export function AppSidebar() {
 											onClick={() => setCurrentPath(fav.path)}
 											className="hover:bg-sidebar-accent/70 data-[active=true]:bg-sidebar-accent/80"
 										>
-											<Folder className="mr-2 h-4 w-4" />
+											{fav.iconId && DEFAULT_ICONS[fav.iconId] ? (
+												<img
+													src={DEFAULT_ICONS[fav.iconId]}
+													alt=""
+													className="mr-2 h-4 w-4 invert-0 dark:invert"
+													data-testid="favorite-icon"
+												/>
+											) : (
+												<Folder
+													className="mr-2 h-4 w-4"
+													data-testid="favorite-icon"
+												/>
+											)}
 											{fav.name}
 										</SidebarMenuButton>
 									</SidebarMenuItem>

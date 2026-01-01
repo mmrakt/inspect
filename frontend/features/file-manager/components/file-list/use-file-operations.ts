@@ -1,38 +1,36 @@
-import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
 import { message } from "@tauri-apps/plugin-dialog";
 import { useCallback, useEffect, useState } from "react";
+import { commands, events } from "@/shared/lib/specta/__generated__";
 
-export function useFileOperations(onOperationComplete: () => void) {
+export function useFileOperations(
+	onOperationComplete: () => void,
+	addFavorite: (path: string) => void,
+) {
 	const [renamingPath, setRenamingPath] = useState<string | null>(null);
 
 	const moveToTrash = useCallback(
 		async (path: string | string[]) => {
-			try {
-				const paths = Array.isArray(path) ? path : [path];
-				await Promise.all(
-					paths.map((p) => invoke("move_to_trash", { path: p })),
-				);
-				onOperationComplete();
-			} catch (error) {
-				console.error("Failed to move to trash:", error);
+			const paths = Array.isArray(path) ? path : [path];
+			for (const p of paths) {
+				const res = await commands.moveToTrash(p);
+				if (res.status === "error") {
+					console.error(`Failed to move ${p} to trash:`, res.error);
+				}
 			}
+			onOperationComplete();
 		},
 		[onOperationComplete],
 	);
 
 	const rename = useCallback(
 		async (path: string, newName: string) => {
-			try {
-				await invoke("rename_entry", { path, newName });
+			const res = await commands.renameEntry(path, newName);
+			if (res.status === "ok") {
 				setRenamingPath(null);
 				onOperationComplete();
-			} catch (error) {
-				console.error("Failed to rename:", error);
-				const errorMessage =
-					typeof error === "string"
-						? error
-						: (error as Error)?.message || JSON.stringify(error);
+			} else {
+				console.error("Failed to rename:", res.error);
+				const errorMessage = res.error;
 
 				if (errorMessage.includes("Target already exists")) {
 					try {
@@ -54,39 +52,39 @@ export function useFileOperations(onOperationComplete: () => void) {
 
 	const duplicate = useCallback(
 		async (path: string) => {
-			try {
-				await invoke("duplicate_entry", { path });
+			const res = await commands.duplicateEntry(path);
+			if (res.status === "ok") {
 				onOperationComplete();
-			} catch (error) {
-				console.error("Failed to duplicate:", error);
+			} else {
+				console.error("Failed to duplicate:", res.error);
 			}
 		},
 		[onOperationComplete],
 	);
 
 	useEffect(() => {
-		const unlisten = listen<{ action: string; path: string }>(
-			"context-menu-action",
-			(event) => {
-				const { action, path } = event.payload;
-				switch (action) {
-					case "rename":
-						setRenamingPath(path);
-						break;
-					case "duplicate":
-						duplicate(path);
-						break;
-					case "trash":
-						moveToTrash(path);
-						break;
-				}
-			},
-		);
+		const unlisten = events.contextMenuPayload.listen((event) => {
+			const { action, path } = event.payload;
+			switch (action) {
+				case "rename":
+					setRenamingPath(path);
+					break;
+				case "duplicate":
+					duplicate(path);
+					break;
+				case "trash":
+					moveToTrash(path);
+					break;
+				case "add-favorite":
+					addFavorite(path);
+					break;
+			}
+		});
 
 		return () => {
 			unlisten.then((fn) => fn());
 		};
-	}, [duplicate, moveToTrash]);
+	}, [duplicate, moveToTrash, addFavorite]);
 
 	return {
 		renamingPath,

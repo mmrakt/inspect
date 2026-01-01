@@ -5,13 +5,13 @@ use grep_searcher::Searcher;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
 pub struct ContentMatch {
-    pub line_number: u64,
+    pub line_number: u32,
     pub line_content: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
 pub struct SearchResult {
     pub path: String,
     pub matches: Vec<ContentMatch>,
@@ -29,7 +29,7 @@ impl ContentSearcher {
             path,
             UTF8(|line_number, line| {
                 matches.push(ContentMatch {
-                    line_number,
+                    line_number: line_number as u32,
                     line_content: line.trim().to_string(),
                 });
                 Ok(true)

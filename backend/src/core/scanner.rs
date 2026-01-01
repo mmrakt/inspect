@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
 pub struct FileMetadata {
     pub size: u64,
     pub mtime: Option<u64>,
@@ -12,7 +12,7 @@ pub struct FileMetadata {
     pub is_app: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
 pub struct FileEntry {
     pub path: PathBuf,
     pub name: String,

@@ -8,6 +8,7 @@ interface AppContextType {
 	setCurrentPath: (path: string) => void;
 	shouldShowHidden: boolean;
 	favorites: Favorite[];
+	addFavorite: (path: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -28,6 +29,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 				setCurrentPath: app.setCurrentPath,
 				shouldShowHidden: app.shouldShowHidden,
 				favorites: app.favorites,
+				addFavorite: app.addFavorite,
 			}}
 		>
 			{children}

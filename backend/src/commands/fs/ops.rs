@@ -1,65 +1,19 @@
-use crate::core::content_searcher::{ContentSearcher, SearchResult};
-use crate::core::scanner::{FileEntry, Scanner};
-use crate::core::searcher::Searcher;
-use crate::core::state::AppState;
-use anyhow::Result;
 use std::fs;
 use std::path::{Path, PathBuf};
-use tauri::State;
 
+/// Opens a file or application using the default system handler.
 #[tauri::command]
-pub async fn scan_directory(
-    path: String,
-    recursive: bool,
-    show_hidden: bool,
-    state: State<'_, AppState>,
-) -> Result<usize, String> {
-    let mut scanner = Scanner::new(&path).with_show_hidden(show_hidden);
-    if !recursive {
-        scanner = scanner.with_max_depth(1);
-    }
-    let entries = scanner.scan().map_err(|e| e.to_string())?;
-    let count = entries.len();
-    state.update_files(entries);
-    Ok(count)
+#[specta::specta]
+pub async fn open_app(path: String, app_handle: tauri::AppHandle) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    app_handle
+        .opener()
+        .open_path(path, None::<String>)
+        .map_err(|e| e.to_string())?;
+    Ok(())
 }
 
-#[tauri::command]
-pub async fn search_files(
-    query: String,
-    state: State<'_, AppState>,
-) -> Result<Vec<FileEntry>, String> {
-    let files = state.files.lock().unwrap();
-    let results = Searcher::search_filenames(&files, &query);
-    Ok(results)
-}
-
-#[tauri::command]
-pub async fn search_content(query: String, path: String) -> Result<Vec<SearchResult>, String> {
-    // This is a simple implementation that searches a single path or directory.
-    // In a real scenario, we might want to parallelize this across multiple files.
-    let mut results = Vec::new();
-    let p = Path::new(&path);
-    if p.is_file() {
-        if let Some(res) = ContentSearcher::search_file(p, &query).map_err(|e| e.to_string())? {
-            results.push(res);
-        }
-    } else {
-        // For directories, we can use our Scanner to get all files first, or just use WalkDir again.
-        // For now, let's keep it simple.
-        let scanner = Scanner::new(p);
-        let entries = scanner.scan().map_err(|e| e.to_string())?;
-        for entry in entries {
-            if !entry.metadata.is_dir {
-                if let Ok(Some(res)) = ContentSearcher::search_file(&entry.path, &query) {
-                    results.push(res);
-                }
-            }
-        }
-    }
-    Ok(results)
-}
-
+/// Internal implementation for moving multiple file system entries.
 fn move_entries_impl(paths: &[PathBuf], target_dir: &Path) -> Result<Vec<PathBuf>, String> {
     if !target_dir.is_dir() {
         return Err("Target directory does not exist".to_string());
@@ -81,7 +35,9 @@ fn move_entries_impl(paths: &[PathBuf], target_dir: &Path) -> Result<Vec<PathBuf
     Ok(moved)
 }
 
+/// Moves multiple files or directories to a target directory.
 #[tauri::command]
+#[specta::specta]
 pub async fn move_entries(paths: Vec<String>, target_dir: String) -> Result<Vec<String>, String> {
     let sources: Vec<PathBuf> = paths.into_iter().map(PathBuf::from).collect();
     let target = PathBuf::from(target_dir);
@@ -91,30 +47,16 @@ pub async fn move_entries(paths: Vec<String>, target_dir: String) -> Result<Vec<
         .map(|path| path.to_string_lossy().to_string())
         .collect())
 }
-#[tauri::command]
-pub async fn open_app(path: String, app_handle: tauri::AppHandle) -> Result<(), String> {
-    use tauri_plugin_opener::OpenerExt;
-    app_handle
-        .opener()
-        .open_path(path, None::<String>)
-        .map_err(|e| e.to_string())?;
-    Ok(())
-}
 
+/// Renames a file or directory.
 #[tauri::command]
-pub async fn get_app_icon(path: String) -> Result<String, String> {
-    use crate::utils::icon::extract_app_icon;
-    extract_app_icon(Path::new(&path)).map_err(|e| e.to_string())
-}
-
-#[tauri::command]
+#[specta::specta]
 pub async fn rename_entry(path: String, new_name: String) -> Result<(), String> {
     let source = PathBuf::from(&path);
     let parent = source.parent().ok_or("Invalid path")?;
     let destination = parent.join(new_name);
 
     if destination.exists() {
-        // Return a specific error message that frontend can match
         return Err("Target already exists".to_string());
     }
 
@@ -122,11 +64,12 @@ pub async fn rename_entry(path: String, new_name: String) -> Result<(), String> 
     Ok(())
 }
 
+/// Creates a duplicate of a file or directory with a "copy" suffix.
 #[tauri::command]
+#[specta::specta]
 pub async fn duplicate_entry(path: String) -> Result<String, String> {
     let source = PathBuf::from(&path);
     let parent = source.parent().ok_or("Invalid path")?;
-    let _file_name = source.file_name().ok_or("Invalid path")?.to_string_lossy();
     let ext = source.extension().map(|e| e.to_string_lossy().to_string());
     let stem = source.file_stem().ok_or("Invalid path")?.to_string_lossy();
 
@@ -147,16 +90,11 @@ pub async fn duplicate_entry(path: String) -> Result<String, String> {
     let mut destination;
     let mut counter = start_counter;
 
-    // If it was "foo", start_counter is 0. Next is "foo copy" (implies 1 but no number).
-    // If it was "foo copy", start_counter is 1. Next should be "foo copy 2".
-
     loop {
         if counter == 0 {
             new_name = format!("{} copy", base_stem);
             counter = 1;
         } else {
-            // If we just became 1 from 0, and "foo copy" exists, next loop `counter` will be 1 (incremented at end of loop? No, logic above)
-            // Let's restructure loop efficiently.
             counter += 1;
             new_name = format!("{} copy {}", base_stem, counter);
         }
@@ -180,6 +118,7 @@ pub async fn duplicate_entry(path: String) -> Result<String, String> {
     Ok(destination.to_string_lossy().to_string())
 }
 
+/// Recursively copies a directory and its contents.
 fn copy_recursively(source: &Path, user_destination: &Path) -> std::io::Result<()> {
     fs::create_dir_all(user_destination)?;
     for entry in fs::read_dir(source)? {
@@ -194,67 +133,11 @@ fn copy_recursively(source: &Path, user_destination: &Path) -> std::io::Result<(
     Ok(())
 }
 
+/// Moves a file or directory to the system trash.
 #[tauri::command]
+#[specta::specta]
 pub async fn move_to_trash(path: String) -> Result<(), String> {
     trash::delete(path).map_err(|e| e.to_string())?;
-    Ok(())
-}
-
-#[tauri::command]
-pub async fn show_context_menu(
-    app: tauri::AppHandle,
-    path: String,
-    state: State<'_, AppState>,
-) -> Result<(), String> {
-    use tauri::menu::ContextMenu;
-    use tauri::menu::Menu;
-    use tauri::Manager;
-
-    // Store path in state
-    state.set_context_menu_path(Some(path));
-
-    let rename = crate::utils::menu::create_context_menu_item(
-        &app,
-        "context_rename",
-        "Rename",
-        Some("rename"),
-    )
-    .map_err(|e| e.to_string())?;
-
-    let duplicate = crate::utils::menu::create_context_menu_item(
-        &app,
-        "context_duplicate",
-        "Duplicate",
-        Some("duplicate"),
-    )
-    .map_err(|e| e.to_string())?;
-
-    let trash = crate::utils::menu::create_context_menu_item(
-        &app,
-        "context_trash",
-        "Move to Trash",
-        Some("trash"),
-    )
-    .map_err(|e| e.to_string())?;
-
-    let menu = Menu::with_items(
-        &app,
-        &[
-            &rename,
-            &duplicate,
-            &tauri::menu::PredefinedMenuItem::separator(&app).map_err(|e| e.to_string())?,
-            &trash,
-        ],
-    )
-    .map_err(|e| e.to_string())?;
-
-    if let Some(window) = app.get_webview_window("main") {
-        menu.popup(window.as_ref().window())
-            .map_err(|e| e.to_string())?;
-    } else {
-        return Err("No main window".to_string());
-    }
-
     Ok(())
 }
 
@@ -295,5 +178,47 @@ mod tests {
 
         let err = move_entries_impl(&[file_a], target_dir.path()).unwrap_err();
         assert!(err.contains("Target already exists"));
+    }
+
+    #[tokio::test]
+    async fn rename_entry_renames_file() {
+        let dir = tempdir().unwrap();
+        let file_path = dir.path().join("old.txt");
+        fs::write(&file_path, "test").unwrap();
+
+        super::rename_entry(
+            file_path.to_string_lossy().to_string(),
+            "new.txt".to_string(),
+        )
+        .await
+        .unwrap();
+
+        assert!(!file_path.exists());
+        assert!(dir.path().join("new.txt").exists());
+        assert_eq!(
+            fs::read_to_string(dir.path().join("new.txt")).unwrap(),
+            "test"
+        );
+    }
+
+    #[test]
+    fn copy_recursively_works() {
+        let source_dir = tempdir().unwrap();
+        let dest_dir = tempdir().unwrap();
+
+        let sub_dir = source_dir.path().join("sub");
+        fs::create_dir(&sub_dir).unwrap();
+        fs::write(sub_dir.join("a.txt"), "a").unwrap();
+        fs::write(source_dir.path().join("b.txt"), "b").unwrap();
+
+        let dest_path = dest_dir.path().join("copied");
+        super::copy_recursively(source_dir.path(), &dest_path).unwrap();
+
+        assert!(dest_path.join("sub/a.txt").exists());
+        assert!(dest_path.join("b.txt").exists());
+        assert_eq!(
+            fs::read_to_string(dest_path.join("sub/a.txt")).unwrap(),
+            "a"
+        );
     }
 }

@@ -103,4 +103,26 @@ describe("AppSidebar", () => {
 		expect(screen.getByText("Documents")).toBeInTheDocument();
 		expect(screen.getByText("Downloads")).toBeInTheDocument();
 	});
+
+	it("renders SVG icons for default folders", async () => {
+		render(
+			<AppProvider>
+				<AppSidebar />
+			</AppProvider>,
+		);
+
+		await waitFor(
+			() => expect(screen.getByText("Applications")).toBeInTheDocument(),
+			{ timeout: 2000 },
+		);
+
+		// Applications, Documents, Downloads, Home (user) should have icons
+		const icons = screen.getAllByTestId("favorite-icon");
+		expect(icons.length).toBe(4);
+		// In this test, there are 4 favorites, all should have img because they are all defaults
+		// We can check if they are images if we want to be specific
+		for (const icon of icons) {
+			expect(icon.tagName).toBe("IMG");
+		}
+	});
 });
