@@ -17,6 +17,7 @@ import applicationsIcon from "@/assets/application.svg";
 import documentsIcon from "@/assets/document.svg";
 import downloadsIcon from "@/assets/download.svg";
 import homeIcon from "@/assets/home.svg";
+import { commands } from "@/shared/lib/specta/__generated__";
 import { SettingsModal } from "./settings-modal";
 
 const DEFAULT_ICONS: Record<string, string> = {
@@ -29,6 +30,11 @@ const DEFAULT_ICONS: Record<string, string> = {
 export function AppSidebar() {
 	const { favorites, currentPath, setCurrentPath } = useAppContext();
 	const [settingsOpen, setSettingsOpen] = useState(false);
+
+	const handleContextMenu = (e: React.MouseEvent, path: string) => {
+		e.preventDefault();
+		commands.showContextMenu(path, true);
+	};
 
 	return (
 		<>
@@ -50,6 +56,7 @@ export function AppSidebar() {
 										<SidebarMenuButton
 											isActive={currentPath === fav.path}
 											onClick={() => setCurrentPath(fav.path)}
+											onContextMenu={(e) => handleContextMenu(e, fav.path)}
 											className="hover:bg-sidebar-accent/70 data-[active=true]:bg-sidebar-accent/80"
 										>
 											{fav.iconId && DEFAULT_ICONS[fav.iconId] ? (

@@ -1,6 +1,7 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProvider } from "@/apps/providers/app-provider";
+import { commands } from "@/shared/lib/specta/__generated__";
 import { AppSidebar } from "./app-sidebar";
 
 // Mock Tauri path
@@ -8,6 +9,13 @@ vi.mock("@tauri-apps/api/path", () => ({
 	homeDir: vi.fn(() => Promise.resolve("/home/user")),
 	documentDir: vi.fn(() => Promise.resolve("/home/user/Documents")),
 	downloadDir: vi.fn(() => Promise.resolve("/home/user/Downloads")),
+}));
+
+// Mock Specta commands
+vi.mock("@/shared/lib/specta/__generated__", () => ({
+	commands: {
+		showContextMenu: vi.fn(),
+	},
 }));
 
 // Mock Sidebar components to avoid rendering complexity
@@ -51,13 +59,20 @@ vi.mock("@shared/components/ui/sidebar", () => ({
 	SidebarMenuButton: ({
 		children,
 		onClick,
+		onContextMenu,
 		isActive,
 	}: {
 		children: React.ReactNode;
 		onClick?: () => void;
+		onContextMenu?: (e: React.MouseEvent) => void;
 		isActive?: boolean;
 	}) => (
-		<button type="button" onClick={onClick} data-active={isActive}>
+		<button
+			type="button"
+			onClick={onClick}
+			onContextMenu={onContextMenu}
+			data-active={isActive}
+		>
 			{children}
 		</button>
 	),
@@ -73,27 +88,20 @@ vi.mock("@shared/components/ui/sidebar", () => ({
 describe("AppSidebar", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-	});
-
-	it("renders title", async () => {
 		render(
 			<AppProvider>
 				<AppSidebar />
 			</AppProvider>,
 		);
+	});
 
+	it("renders title", async () => {
 		await waitFor(() =>
 			expect(screen.getByText("inspect")).toBeInTheDocument(),
 		);
 	});
 
 	it("renders favorites after loading", async () => {
-		render(
-			<AppProvider>
-				<AppSidebar />
-			</AppProvider>,
-		);
-
 		// Wait for favorites to be loaded from useApp init
 		await waitFor(
 			() => expect(screen.getByText("Applications")).toBeInTheDocument(),
@@ -105,12 +113,6 @@ describe("AppSidebar", () => {
 	});
 
 	it("renders SVG icons for default folders", async () => {
-		render(
-			<AppProvider>
-				<AppSidebar />
-			</AppProvider>,
-		);
-
 		await waitFor(
 			() => expect(screen.getByText("Applications")).toBeInTheDocument(),
 			{ timeout: 2000 },
@@ -123,6 +125,23 @@ describe("AppSidebar", () => {
 		// We can check if they are images if we want to be specific
 		for (const icon of icons) {
 			expect(icon.tagName).toBe("IMG");
+		}
+	});
+
+	it("triggers context menu with isFavorite=true when right-clicked", async () => {
+		await waitFor(() =>
+			expect(screen.getByText("Applications")).toBeInTheDocument(),
+		);
+
+		const appButton = screen.getByText("Applications").closest("button");
+		expect(appButton).toBeInTheDocument();
+
+		if (appButton) {
+			fireEvent.contextMenu(appButton);
+			expect(commands.showContextMenu).toHaveBeenCalledWith(
+				"/Applications",
+				true,
+			);
 		}
 	});
 });

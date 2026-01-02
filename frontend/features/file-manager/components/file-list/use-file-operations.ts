@@ -5,6 +5,7 @@ import { commands, events } from "@/shared/lib/specta/__generated__";
 export function useFileOperations(
 	onOperationComplete: () => void,
 	addFavorite: (path: string) => void,
+	removeFavorite: (path: string) => void,
 ) {
 	const [renamingPath, setRenamingPath] = useState<string | null>(null);
 
@@ -78,13 +79,16 @@ export function useFileOperations(
 				case "add-favorite":
 					addFavorite(path);
 					break;
+				case "remove-favorite":
+					removeFavorite(path);
+					break;
 			}
 		});
 
 		return () => {
 			unlisten.then((fn) => fn());
 		};
-	}, [duplicate, moveToTrash, addFavorite]);
+	}, [duplicate, moveToTrash, addFavorite, removeFavorite]);
 
 	return {
 		renamingPath,

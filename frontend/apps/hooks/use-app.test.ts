@@ -63,4 +63,50 @@ describe("useApp hook", () => {
 
 		expect(result.current.shouldShowHidden).toBe(false);
 	});
+
+	it("should add a favorite", async () => {
+		const { result } = renderHook(() => useApp());
+
+		await waitFor(() => expect(result.current.favorites.length).toBe(4));
+
+		act(() => {
+			result.current.addFavorite("/test/path");
+		});
+
+		expect(result.current.favorites).toContainEqual({
+			name: "path",
+			path: "/test/path",
+		});
+	});
+
+	it("should remove a favorite", async () => {
+		const { result } = renderHook(() => useApp());
+
+		await waitFor(() => expect(result.current.favorites.length).toBe(4));
+
+		const pathToRemove = result.current.favorites[0].path;
+
+		act(() => {
+			result.current.removeFavorite(pathToRemove);
+		});
+
+		expect(result.current.favorites).not.toContainEqual(
+			expect.objectContaining({ path: pathToRemove }),
+		);
+		expect(result.current.favorites.length).toBe(3);
+	});
+
+	it("should not add duplicate favorites", async () => {
+		const { result } = renderHook(() => useApp());
+
+		await waitFor(() => expect(result.current.favorites.length).toBe(4));
+
+		const existingPath = result.current.favorites[0].path;
+
+		act(() => {
+			result.current.addFavorite(existingPath);
+		});
+
+		expect(result.current.favorites.length).toBe(4);
+	});
 });

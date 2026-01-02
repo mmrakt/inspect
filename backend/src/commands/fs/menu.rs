@@ -9,6 +9,7 @@ use tauri::State;
 pub async fn show_context_menu(
     app: tauri::AppHandle,
     path: String,
+    is_favorite: bool,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     use tauri::menu::ContextMenu;
@@ -45,20 +46,20 @@ pub async fn show_context_menu(
     let mut items: Vec<&dyn tauri::menu::IsMenuItem<_>> = vec![&rename, &duplicate];
 
     let is_dir = std::path::Path::new(&path).is_dir();
-    let add_favorite = if is_dir {
-        let item = crate::utils::menu::create_context_menu_item(
-            &app,
-            MENU_ID_ADD_FAVORITE,
-            "Add to Favorites",
-            None,
-        )
-        .map_err(|e| e.to_string())?;
+    let favorite_item = if is_dir {
+        let (id, text) = if is_favorite {
+            (MENU_ID_REMOVE_FAVORITE, "Remove from Favorites")
+        } else {
+            (MENU_ID_ADD_FAVORITE, "Add to Favorites")
+        };
+        let item = crate::utils::menu::create_context_menu_item(&app, id, text, None)
+            .map_err(|e| e.to_string())?;
         Some(item)
     } else {
         None
     };
 
-    if let Some(ref item) = add_favorite {
+    if let Some(ref item) = favorite_item {
         items.push(item);
     }
 

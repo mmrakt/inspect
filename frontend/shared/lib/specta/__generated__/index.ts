@@ -148,11 +148,14 @@ export const commands = {
 	 * Displays a native context menu for a specific file system entry.
 	 * The menu includes Rename, Duplicate, Move to Trash, and Add to Favorites (for directories).
 	 */
-	async showContextMenu(path: string): Promise<Result<null, string>> {
+	async showContextMenu(
+		path: string,
+		isFavorite: boolean,
+	): Promise<Result<null, string>> {
 		try {
 			return {
 				status: "ok",
-				data: await TAURI_INVOKE("show_context_menu", { path }),
+				data: await TAURI_INVOKE("show_context_menu", { path, isFavorite }),
 			};
 		} catch (e) {
 			if (e instanceof Error) throw e;
@@ -178,7 +181,8 @@ export type ContextMenuAction =
 	| "rename"
 	| "duplicate"
 	| "trash"
-	| "add-favorite";
+	| "add-favorite"
+	| "remove-favorite";
 export type ContextMenuPayload = { action: ContextMenuAction; path: string };
 export type FileEntry = { path: string; name: string; metadata: FileMetadata };
 export type FileMetadata = {

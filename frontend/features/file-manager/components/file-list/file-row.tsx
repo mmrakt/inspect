@@ -12,6 +12,7 @@ import { TableCell, TableRow } from "@shared/components/ui/table";
 import { cn } from "@shared/lib/utils";
 import { MoreHorizontal } from "lucide-react";
 import { type MouseEvent, useEffect, useRef, useState } from "react";
+import { commands } from "@/shared/lib/specta/__generated__";
 
 interface FileRowProps {
 	file: FileEntry;
@@ -21,6 +22,7 @@ interface FileRowProps {
 	isLaunching: boolean;
 	isRenaming: boolean;
 	isHovered: boolean;
+	isFavorite: boolean;
 	iconData?: string;
 	onSelect: (index: number, event: MouseEvent<HTMLTableRowElement>) => void;
 	onOpen: (file: FileEntry) => void;
@@ -38,6 +40,7 @@ export function FileRow({
 	isLaunching,
 	isRenaming,
 	isHovered,
+	isFavorite,
 	iconData,
 	onSelect,
 	onOpen,
@@ -111,8 +114,7 @@ export function FileRow({
 		}
 
 		try {
-			const { invoke } = await import("@tauri-apps/api/core");
-			await invoke("show_context_menu", { path: file.path });
+			await commands.showContextMenu(file.path, isFavorite);
 		} catch (error) {
 			console.error("Failed to open context menu:", error);
 		}

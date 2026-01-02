@@ -100,6 +100,10 @@ export function useApp() {
 		});
 	};
 
+	const removeFavorite = (path: string) => {
+		setFavorites((prev) => prev.filter((f) => f.path !== path));
+	};
+
 	return {
 		searchQuery,
 		setSearchQuery,
@@ -108,5 +112,6 @@ export function useApp() {
 		shouldShowHidden,
 		favorites,
 		addFavorite,
+		removeFavorite,
 	};
 }

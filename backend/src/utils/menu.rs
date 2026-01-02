@@ -42,6 +42,7 @@ pub fn handle_menu_event<R: tauri::Runtime>(
         id if id == MENU_ID_DUPLICATE => ContextMenuAction::Duplicate,
         id if id == MENU_ID_TRASH => ContextMenuAction::Trash,
         id if id == MENU_ID_ADD_FAVORITE => ContextMenuAction::AddFavorite,
+        id if id == MENU_ID_REMOVE_FAVORITE => ContextMenuAction::RemoveFavorite,
         _ => return,
     };
 

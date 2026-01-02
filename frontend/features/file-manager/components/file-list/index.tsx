@@ -22,6 +22,8 @@ export function FileList() {
 		shouldShowHidden,
 		setCurrentPath,
 		addFavorite,
+		removeFavorite,
+		favorites,
 	} = useAppContext();
 
 	const {
@@ -51,7 +53,7 @@ export function FileList() {
 
 	const { appIcons } = useAppIcons(files);
 	const { renamingPath, setRenamingPath, rename, moveToTrash } =
-		useFileOperations(refresh, addFavorite);
+		useFileOperations(refresh, addFavorite, removeFavorite);
 
 	const [hoveredPath, setHoveredPath] = useState<string | null>(null);
 
@@ -161,6 +163,7 @@ export function FileList() {
 								isLaunching={launchingPath === file.path}
 								isRenaming={renamingPath === file.path}
 								isHovered={hoveredPath === file.path}
+								isFavorite={favorites.some((f) => f.path === file.path)}
 								iconData={appIcons[file.path]}
 								onSelect={onRowSelect}
 								onOpen={handleOpen}
