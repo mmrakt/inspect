@@ -137,11 +137,11 @@ export function FileRow({
 		<TableRow
 			ref={handleRowRef}
 			className={cn(
-				"group cursor-default transition-colors focus:outline-none hover:bg-transparent",
+				"group cursor-default transition-all focus:outline-none hover:bg-transparent",
 				isSelected
-					? "bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground"
-					: isHovered && "bg-muted/50",
-				isOver && isDir && "bg-accent/70 text-accent-foreground",
+					? "bg-primary/15 text-primary hover:bg-primary/20"
+					: isHovered && "bg-muted/40",
+				isOver && isDir && "bg-primary/25 text-primary",
 				isHoverPreview &&
 					isDir &&
 					"bg-primary/20 ring-2 ring-primary/70 shadow-[0_0_0_2px_rgba(59,130,246,0.35)] animate-pulse",
@@ -159,7 +159,7 @@ export function FileRow({
 			{...listeners}
 			tabIndex={isRenaming ? -1 : 0}
 		>
-			<TableCell className="font-medium flex items-center gap-3 py-2">
+			<TableCell className="font-medium flex items-center gap-3 py-3 h-12">
 				<FileIcon
 					isApp={isApp}
 					isDir={isDir}
@@ -199,13 +199,17 @@ export function FileRow({
 					</span>
 				)}
 			</TableCell>
-			<TableCell className="text-muted-foreground py-2">
-				{isDir ? "-" : formatSize(file.metadata.size)}
+			<TableCell className="text-muted-foreground/70 py-3 h-12 text-xs">
+				{isDir ? (
+					<span className="opacity-40">—</span>
+				) : (
+					formatSize(file.metadata.size)
+				)}
 			</TableCell>
-			<TableCell className="text-muted-foreground py-2">
+			<TableCell className="text-muted-foreground/70 py-3 h-12 text-xs">
 				{formatDate(file.metadata.mtime)}
 			</TableCell>
-			<TableCell className="text-right py-2">
+			<TableCell className="text-right py-3 h-12">
 				<Button
 					variant="ghost"
 					size="icon"

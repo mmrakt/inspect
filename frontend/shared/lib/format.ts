@@ -7,6 +7,12 @@ export function formatSize(bytes: number) {
 }
 
 export function formatDate(timestamp: number | null) {
-	if (!timestamp) return "-";
-	return new Date(timestamp * 1000).toLocaleString();
+	if (!timestamp) return "—";
+	return new Date(timestamp * 1000).toLocaleDateString(undefined, {
+		year: "numeric",
+		month: "2-digit",
+		day: "2-digit",
+		hour: "2-digit",
+		minute: "2-digit",
+	});
 }

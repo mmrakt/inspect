@@ -28,9 +28,9 @@ export function FileIcon({
 					)}
 				</div>
 			) : isDir ? (
-				<Folder className="h-4 w-4 text-blue-400 fill-blue-400/20" />
+				<Folder className="h-4 w-4 text-cyan-500/90 fill-cyan-500/10" />
 			) : (
-				<File className="h-4 w-4 text-muted-foreground" />
+				<File className="h-4 w-4 text-muted-foreground/50" />
 			)}
 			{isLaunching && (
 				<div className="absolute -top-1 -right-1 bg-background rounded-full p-0.5 shadow-sm">

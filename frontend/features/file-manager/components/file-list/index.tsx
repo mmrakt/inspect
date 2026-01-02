@@ -144,12 +144,18 @@ export function FileList() {
 		>
 			<div className="w-full">
 				<Table>
-					<TableHeader className="bg-muted/50 sticky top-0">
-						<TableRow>
-							<TableHead className="w-[400px]">Name</TableHead>
-							<TableHead>Size</TableHead>
-							<TableHead>Modified</TableHead>
-							<TableHead className="text-right" />
+					<TableHeader className="bg-muted/30 sticky top-0 border-b border-border/40">
+						<TableRow className="hover:bg-transparent border-none">
+							<TableHead className="w-[400px] text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 h-10">
+								Name
+							</TableHead>
+							<TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 h-10">
+								Size
+							</TableHead>
+							<TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 h-10">
+								Modified
+							</TableHead>
+							<TableHead className="text-right h-10" />
 						</TableRow>
 					</TableHeader>
 					<TableBody>

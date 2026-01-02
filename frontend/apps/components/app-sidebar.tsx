@@ -39,14 +39,14 @@ export function AppSidebar() {
 	return (
 		<>
 			<Sidebar className="border-r border-border/60 bg-sidebar">
-				<SidebarHeader className="p-4 border-b border-border/50 bg-sidebar">
-					<h1 className="text-[11px] font-semibold tracking-[0.32em] uppercase font-mono text-muted-foreground">
+				<SidebarHeader className="p-4 bg-sidebar">
+					<h1 className="text-xs font-bold tracking-tight text-foreground/80">
 						inspect
 					</h1>
 				</SidebarHeader>
 				<SidebarContent>
 					<SidebarGroup>
-						<SidebarGroupLabel className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground/70">
+						<SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50 px-2">
 							Favorites
 						</SidebarGroupLabel>
 						<SidebarGroupContent>
@@ -57,22 +57,22 @@ export function AppSidebar() {
 											isActive={currentPath === fav.path}
 											onClick={() => setCurrentPath(fav.path)}
 											onContextMenu={(e) => handleContextMenu(e, fav.path)}
-											className="hover:bg-sidebar-accent/70 data-[active=true]:bg-sidebar-accent/80"
+											className="hover:bg-sidebar-accent/50 data-[active=true]:bg-primary/10 data-[active=true]:text-primary transition-all px-2 h-9"
 										>
 											{fav.iconId && DEFAULT_ICONS[fav.iconId] ? (
 												<img
 													src={DEFAULT_ICONS[fav.iconId]}
 													alt=""
-													className="mr-2 h-4 w-4 invert-0 dark:invert"
+													className="mr-3 h-3.5 w-3.5 opacity-70 group-data-[active=true]:opacity-100 invert-0 dark:invert"
 													data-testid="favorite-icon"
 												/>
 											) : (
 												<Folder
-													className="mr-2 h-4 w-4"
+													className="mr-3 h-3.5 w-3.5 opacity-70 group-data-[active=true]:opacity-100"
 													data-testid="favorite-icon"
 												/>
 											)}
-											{fav.name}
+											<span className="text-sm font-medium">{fav.name}</span>
 										</SidebarMenuButton>
 									</SidebarMenuItem>
 								))}
@@ -80,13 +80,13 @@ export function AppSidebar() {
 						</SidebarGroupContent>
 					</SidebarGroup>
 				</SidebarContent>
-				<SidebarFooter className="p-4">
+				<SidebarFooter className="p-2">
 					<SidebarMenuButton
 						onClick={() => setSettingsOpen(true)}
-						className="hover:bg-sidebar-accent/70"
+						className="hover:bg-sidebar-accent/50 text-muted-foreground/70 hover:text-foreground transition-colors px-2 h-9"
 					>
-						<Settings className="mr-2 h-4 w-4" />
-						Settings
+						<Settings className="mr-3 h-3.5 w-3.5" />
+						<span className="text-sm font-medium">Settings</span>
 					</SidebarMenuButton>
 				</SidebarFooter>
 			</Sidebar>
