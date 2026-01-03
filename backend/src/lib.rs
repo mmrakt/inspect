@@ -41,7 +41,10 @@ pub fn run() {
         use specta_typescript::Typescript;
         specta_builder
             .export(
-                Typescript::default().bigint(specta_typescript::BigIntExportBehavior::Number),
+                Typescript::default()
+                    .bigint(specta_typescript::BigIntExportBehavior::Number)
+                    // Suppress TS errors in generated file: https://github.com/specta-rs/tauri-specta/issues/190
+                    .header("// @ts-nocheck\n"),
                 "../frontend/shared/lib/specta/__generated__/index.ts",
             )
             .expect("Failed to export specta bindings");
@@ -100,7 +103,10 @@ mod tests {
 
         specta_builder
             .export(
-                Typescript::default().bigint(specta_typescript::BigIntExportBehavior::Number),
+                Typescript::default()
+                    .bigint(specta_typescript::BigIntExportBehavior::Number)
+                    // Suppress TS errors in generated file: https://github.com/specta-rs/tauri-specta/issues/190
+                    .header("// @ts-nocheck\n"),
                 "../frontend/shared/lib/specta/__generated__/index.ts",
             )
             .expect("Failed to export specta bindings");
