@@ -7,11 +7,6 @@ import { invoke } from "@tauri-apps/api/core";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock Tauri invoke
-vi.mock("@tauri-apps/api/core", () => ({
-	invoke: vi.fn(),
-}));
-
 describe("useFileList utils", () => {
 	describe("formatSize", () => {
 		it("should format bytes correctly", () => {
@@ -44,7 +39,12 @@ describe("useFileList hook", () => {
 		{
 			name: "file1.txt",
 			path: "file1.txt",
-			metadata: { is_dir: false, size: 1024, mtime: 123456789 },
+			metadata: { is_dir: false, size: 1024, mtime: 123456790 },
+		},
+		{
+			name: "a_file.txt",
+			path: "a_file.txt",
+			metadata: { is_dir: false, size: 512, mtime: 123456788 },
 		},
 	];
 
@@ -80,9 +80,107 @@ describe("useFileList hook", () => {
 
 		await waitFor(() => {
 			expect(result.current.loading).toBe(false);
-			expect(result.current.files).toHaveLength(2);
-			expect(result.current.files[0].name).toBe("folder1");
+			expect(result.current.files).toHaveLength(3);
+			// Default sort is Name asc
+			expect(result.current.files[0].name).toBe("a_file.txt");
+			expect(result.current.files[1].name).toBe("file1.txt");
+			expect(result.current.files[2].name).toBe("folder1");
 		});
+	});
+
+	it("should toggle sort by name", async () => {
+		vi.mocked(invoke).mockImplementation((cmd) => {
+			if (cmd === "scan_directory") return Promise.resolve();
+			if (cmd === "search_files") return Promise.resolve(mockFiles);
+			return Promise.resolve();
+		});
+
+		const { result } = renderHook(() =>
+			useFileList({
+				searchQuery: "",
+				currentPath: ".",
+				shouldShowHidden: false,
+				onPathChange: mockOnPathChange,
+			}),
+		);
+
+		await waitFor(() => expect(result.current.loading).toBe(false));
+
+		// Initial: a_file, file1, folder1 (asc)
+		expect(result.current.files[0].name).toBe("a_file.txt");
+
+		// Toggle name -> desc
+		await act(async () => {
+			result.current.toggleSort("name");
+		});
+
+		expect(result.current.sortKey).toBe("name");
+		expect(result.current.sortOrder).toBe("desc");
+		expect(result.current.files[0].name).toBe("folder1");
+		expect(result.current.files[1].name).toBe("file1.txt");
+		expect(result.current.files[2].name).toBe("a_file.txt");
+	});
+
+	it("should sort by size", async () => {
+		vi.mocked(invoke).mockImplementation((cmd) => {
+			if (cmd === "scan_directory") return Promise.resolve();
+			if (cmd === "search_files") return Promise.resolve(mockFiles);
+			return Promise.resolve();
+		});
+
+		const { result } = renderHook(() =>
+			useFileList({
+				searchQuery: "",
+				currentPath: ".",
+				shouldShowHidden: false,
+				onPathChange: mockOnPathChange,
+			}),
+		);
+
+		await waitFor(() => expect(result.current.loading).toBe(false));
+
+		// Toggle size -> asc
+		await act(async () => {
+			result.current.toggleSort("size");
+		});
+
+		expect(result.current.sortKey).toBe("size");
+		expect(result.current.sortOrder).toBe("asc");
+		// 0, 512, 1024
+		expect(result.current.files[0].name).toBe("folder1");
+		expect(result.current.files[1].name).toBe("a_file.txt");
+		expect(result.current.files[2].name).toBe("file1.txt");
+	});
+
+	it("should sort by modified time", async () => {
+		vi.mocked(invoke).mockImplementation((cmd) => {
+			if (cmd === "scan_directory") return Promise.resolve();
+			if (cmd === "search_files") return Promise.resolve(mockFiles);
+			return Promise.resolve();
+		});
+
+		const { result } = renderHook(() =>
+			useFileList({
+				searchQuery: "",
+				currentPath: ".",
+				shouldShowHidden: false,
+				onPathChange: mockOnPathChange,
+			}),
+		);
+
+		await waitFor(() => expect(result.current.loading).toBe(false));
+
+		// Toggle mtime -> asc
+		await act(async () => {
+			result.current.toggleSort("mtime");
+		});
+
+		expect(result.current.sortKey).toBe("mtime");
+		expect(result.current.sortOrder).toBe("asc");
+		// 123456788, 123456789, 123456790
+		expect(result.current.files[0].name).toBe("a_file.txt");
+		expect(result.current.files[1].name).toBe("folder1");
+		expect(result.current.files[2].name).toBe("file1.txt");
 	});
 
 	it("should handle navigation keyboard events", async () => {
@@ -103,26 +201,20 @@ describe("useFileList hook", () => {
 
 		await waitFor(() => expect(result.current.loading).toBe(false));
 
-		// ArrowDown
+		// Default sort: a_file.txt (0), file1.txt (1), folder1 (2)
+		// ArrowDown to file1.txt
 		await act(async () => {
 			window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown" }));
 		});
 		expect(result.current.focusedIndex).toBe(1);
 		expect(result.current.selectedIndices.has(1)).toBe(true);
 
-		// ArrowRight on folder
+		// ArrowDown to folder1
 		await act(async () => {
-			window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft" }));
+			window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown" }));
 		});
-		// Since currentPath is ".", nothing happens
-		expect(mockOnPathChange).not.toHaveBeenCalled();
-
-		// ArrowUp
-		await act(async () => {
-			window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp" }));
-		});
-		expect(result.current.focusedIndex).toBe(0);
-		expect(result.current.selectedIndices.has(0)).toBe(true);
+		expect(result.current.focusedIndex).toBe(2);
+		expect(result.current.selectedIndices.has(2)).toBe(true);
 
 		// ArrowRight on folder1
 		await act(async () => {

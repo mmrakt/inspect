@@ -3,13 +3,6 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useApp } from "@/apps/hooks/use-app";
 
-// Mock Tauri path
-vi.mock("@tauri-apps/api/path", () => ({
-	homeDir: vi.fn(),
-	documentDir: vi.fn(),
-	downloadDir: vi.fn(),
-}));
-
 describe("useApp hook", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();

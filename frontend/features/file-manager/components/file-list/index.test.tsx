@@ -4,28 +4,6 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProvider } from "@/apps/providers/app-provider";
 
-// Mock Tauri invoke
-vi.mock("@tauri-apps/api/core", () => ({
-	invoke: vi.fn(),
-}));
-
-// Mock Tauri path
-vi.mock("@tauri-apps/api/path", () => ({
-	homeDir: vi.fn(() => Promise.resolve(".")),
-	documentDir: vi.fn(() => Promise.resolve("Documents")),
-	downloadDir: vi.fn(() => Promise.resolve("Downloads")),
-}));
-
-// Mock Tauri event
-vi.mock("@tauri-apps/api/event", () => ({
-	listen: vi.fn(() => Promise.resolve(() => {})),
-}));
-
-// Mock Tauri dialog
-vi.mock("@tauri-apps/plugin-dialog", () => ({
-	message: vi.fn(),
-}));
-
 describe("FileList UI", () => {
 	const mockFiles = [
 		{

@@ -37,6 +37,9 @@ interface FolderDropData {
 	path: string;
 }
 
+export type SortKey = "name" | "size" | "mtime";
+export type SortOrder = "asc" | "desc";
+
 /**
  * ファイル一覧の取得、選択状態、起動操作など一覧表示に必要な状態と操作を提供する。
  */
@@ -61,6 +64,8 @@ export function useFileList({
 	const hoverFolderRef = useRef<string | null>(null);
 	const lastPointerMoveAtRef = useRef(0);
 	const [hoverPreviewPath, setHoverPreviewPath] = useState<string | null>(null);
+	const [sortKey, setSortKey] = useState<SortKey>("name");
+	const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 
 	const preferredIndex = (() => {
 		if (files.length === 0) return null;
@@ -128,9 +133,45 @@ export function useFileList({
 		onTrash,
 	});
 
-	const handleScanComplete = useCallback((results: FileEntry[]) => {
-		setFiles(results);
-	}, []);
+	const sortFiles = useCallback(
+		(entries: FileEntry[], key: SortKey, order: SortOrder) => {
+			return [...entries].sort((a, b) => {
+				let comparison = 0;
+				if (key === "name") {
+					comparison = a.name.localeCompare(b.name, undefined, {
+						numeric: true,
+						sensitivity: "base",
+					});
+				} else if (key === "size") {
+					comparison = a.metadata.size - b.metadata.size;
+				} else if (key === "mtime") {
+					const timeA = a.metadata.mtime ?? 0;
+					const timeB = b.metadata.mtime ?? 0;
+					comparison = timeA - timeB;
+				}
+
+				return order === "asc" ? comparison : -comparison;
+			});
+		},
+		[],
+	);
+
+	const handleScanComplete = useCallback(
+		(results: FileEntry[]) => {
+			setFiles(sortFiles(results, sortKey, sortOrder));
+		},
+		[sortFiles, sortKey, sortOrder],
+	);
+
+	const toggleSort = useCallback(
+		(key: SortKey) => {
+			const newOrder = sortKey === key && sortOrder === "asc" ? "desc" : "asc";
+			setSortKey(key);
+			setSortOrder(newOrder);
+			setFiles((prev) => sortFiles(prev, key, newOrder));
+		},
+		[sortFiles, sortKey, sortOrder],
+	);
 
 	const { loading, refresh } = useFileSystem({
 		currentPath,
@@ -340,6 +381,9 @@ export function useFileList({
 			handleDragEnd,
 			handleDragCancel,
 		},
+		sortKey,
+		sortOrder,
+		toggleSort,
 		refresh,
 	};
 }

@@ -11,6 +11,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@shared/components/ui/table";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAppContext } from "@/apps/providers/app-provider";
 import { useFileOperations } from "./use-file-operations";
@@ -36,6 +37,9 @@ export function FileList() {
 		launchingPath,
 		onRowSelect,
 		dragState,
+		sortKey,
+		sortOrder,
+		toggleSort,
 		refresh,
 	} = useFileList({
 		searchQuery,
@@ -146,14 +150,47 @@ export function FileList() {
 				<Table>
 					<TableHeader className="bg-muted/30 sticky top-0 border-b border-border/40">
 						<TableRow className="hover:bg-transparent border-none">
-							<TableHead className="w-[400px] text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 h-10">
-								Name
+							<TableHead
+								className="w-[400px] text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 h-10 cursor-pointer hover:text-muted-foreground transition-colors group"
+								onClick={() => toggleSort("name")}
+							>
+								<div className="flex items-center gap-1">
+									Name
+									{sortKey === "name" &&
+										(sortOrder === "asc" ? (
+											<ChevronUp className="h-3 w-3" />
+										) : (
+											<ChevronDown className="h-3 w-3" />
+										))}
+								</div>
 							</TableHead>
-							<TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 h-10">
-								Size
+							<TableHead
+								className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 h-10 cursor-pointer hover:text-muted-foreground transition-colors group"
+								onClick={() => toggleSort("size")}
+							>
+								<div className="flex items-center gap-1">
+									Size
+									{sortKey === "size" &&
+										(sortOrder === "asc" ? (
+											<ChevronUp className="h-3 w-3" />
+										) : (
+											<ChevronDown className="h-3 w-3" />
+										))}
+								</div>
 							</TableHead>
-							<TableHead className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 h-10">
-								Modified
+							<TableHead
+								className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 h-10 cursor-pointer hover:text-muted-foreground transition-colors group"
+								onClick={() => toggleSort("mtime")}
+							>
+								<div className="flex items-center gap-1">
+									Modified
+									{sortKey === "mtime" &&
+										(sortOrder === "asc" ? (
+											<ChevronUp className="h-3 w-3" />
+										) : (
+											<ChevronDown className="h-3 w-3" />
+										))}
+								</div>
 							</TableHead>
 							<TableHead className="text-right h-10" />
 						</TableRow>

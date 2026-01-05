@@ -4,13 +4,6 @@ import { AppProvider } from "@/apps/providers/app-provider";
 import { commands } from "@/shared/lib/specta/__generated__";
 import { AppSidebar } from "./app-sidebar";
 
-// Mock Tauri path
-vi.mock("@tauri-apps/api/path", () => ({
-	homeDir: vi.fn(() => Promise.resolve("/home/user")),
-	documentDir: vi.fn(() => Promise.resolve("/home/user/Documents")),
-	downloadDir: vi.fn(() => Promise.resolve("/home/user/Downloads")),
-}));
-
 // Mock Specta commands
 vi.mock("@/shared/lib/specta/__generated__", () => ({
 	commands: {

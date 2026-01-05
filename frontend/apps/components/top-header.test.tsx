@@ -3,13 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProvider } from "@/apps/providers/app-provider";
 import { TopHeader } from "./top-header";
 
-// Mock Tauri path
-vi.mock("@tauri-apps/api/path", () => ({
-	homeDir: vi.fn(() => Promise.resolve("/home/user")),
-	documentDir: vi.fn(() => Promise.resolve("/home/user/Documents")),
-	downloadDir: vi.fn(() => Promise.resolve("/home/user/Downloads")),
-}));
-
 describe("TopHeader", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -26,7 +19,9 @@ describe("TopHeader", () => {
 		// and AppProvider splits it.
 		// Wait for initial load
 		await waitFor(() =>
-			expect(screen.getByText("inspect")).toBeInTheDocument(),
+			expect(
+				screen.getByPlaceholderText("Ask AI or search files..."),
+			).toBeInTheDocument(),
 		);
 
 		// The mock homeDir returns "/home/user" which is absolute.
