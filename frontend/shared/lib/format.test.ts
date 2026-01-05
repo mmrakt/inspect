@@ -19,13 +19,13 @@ describe("formatDate", () => {
 	it("should format timestamp correctly", () => {
 		const timestamp = 1704067200; // 2024-01-01 00:00:00 UTC
 		const formatted = formatDate(timestamp);
-		expect(formatted).not.toBe("-");
+		expect(formatted).not.toBe("—");
 		// Locale dependent, so we just check it returns a string with some date-like content
 		expect(typeof formatted).toBe("string");
 	});
 
-	it("should return '-' for null or 0", () => {
-		expect(formatDate(null)).toBe("-");
-		expect(formatDate(0)).toBe("-");
+	it("should return '—' for null or 0", () => {
+		expect(formatDate(null)).toBe("—");
+		expect(formatDate(0)).toBe("—");
 	});
 });

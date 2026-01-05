@@ -137,7 +137,7 @@ export function FileRow({
 		<TableRow
 			ref={handleRowRef}
 			className={cn(
-				"group cursor-default transition-all focus:outline-none hover:bg-transparent",
+				"group cursor-default transition-all focus:outline-none hover:bg-transparent h-4",
 				isSelected
 					? "bg-primary/15 text-primary hover:bg-primary/20"
 					: isHovered && "bg-muted/40",
@@ -159,7 +159,7 @@ export function FileRow({
 			{...listeners}
 			tabIndex={isRenaming ? -1 : 0}
 		>
-			<TableCell className="font-medium flex items-center gap-3 py-3 h-12">
+			<TableCell className="font-medium flex items-center gap-3">
 				<FileIcon
 					isApp={isApp}
 					isDir={isDir}
@@ -199,21 +199,21 @@ export function FileRow({
 					</span>
 				)}
 			</TableCell>
-			<TableCell className="text-muted-foreground/70 py-3 h-12 text-xs">
+			<TableCell className="text-muted-foreground/70 text-xs py-0">
 				{isDir ? (
 					<span className="opacity-40">—</span>
 				) : (
 					formatSize(file.metadata.size)
 				)}
 			</TableCell>
-			<TableCell className="text-muted-foreground/70 py-3 h-12 text-xs">
+			<TableCell className="text-muted-foreground/70 text-xs py-0">
 				{formatDate(file.metadata.mtime)}
 			</TableCell>
-			<TableCell className="text-right py-3 h-12">
+			<TableCell className="text-right py-0">
 				<Button
 					variant="ghost"
 					size="icon"
-					className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+					className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
 					onClick={(e) => {
 						e.stopPropagation();
 						// Trigger context menu manually if clicked

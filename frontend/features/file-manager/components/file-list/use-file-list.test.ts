@@ -23,7 +23,7 @@ describe("useFileList utils", () => {
 
 	describe("formatDate", () => {
 		it("should return '-' for null timestamp", () => {
-			expect(formatDate(null)).toBe("-");
+			expect(formatDate(null)).toBe("—");
 		});
 
 		it("should format timestamp correctly", () => {
